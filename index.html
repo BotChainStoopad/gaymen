@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dog Clicker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #87ceeb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── House ── */
+    .scene {
+      position: relative;
+      width: 520px;
+    }
+
+    .house {
+      position: relative;
+      background: #f5deb3;
+      border: 4px solid #8b5e3c;
+      border-radius: 0 0 12px 12px;
+      width: 520px;
+      height: 340px;
+      overflow: hidden;
+    }
+
+    /* Roof */
+    .roof {
+      width: 0;
+      height: 0;
+      border-left:  280px solid transparent;
+      border-right: 280px solid transparent;
+      border-bottom: 150px solid #c0392b;
+      position: absolute;
+      top: -148px;
+      left: -20px;
+      filter: drop-shadow(0 -4px 6px rgba(0,0,0,.25));
+    }
+
+    /* Chimney */
+    .chimney {
+      position: absolute;
+      top: -220px;
+      right: 90px;
+      width: 44px;
+      height: 100px;
+      background: #7f3e1a;
+      border: 3px solid #5a2d0c;
+      border-radius: 3px 3px 0 0;
+    }
+
+    /* Door */
+    .door {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 110px;
+      background: #6b3a2a;
+      border: 3px solid #4a2519;
+      border-radius: 40px 40px 0 0;
+    }
+    .door::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      background: #f0c040;
+      border-radius: 50%;
+      transform: translateY(-50%);
+    }
+
+    /* Window left */
+    .window {
+      position: absolute;
+      top: 80px;
+      width: 80px;
+      height: 70px;
+      background: #aee6ff;
+      border: 4px solid #8b5e3c;
+      border-radius: 4px;
+    }
+    .window::before, .window::after {
+      content: '';
+      position: absolute;
+      background: #8b5e3c;
+    }
+    .window::before { width: 4px; height: 100%; left: 50%; transform: translateX(-50%); }
+    .window::after  { height: 4px; width: 100%; top: 50%;  transform: translateY(-50%); }
+
+    .window.left  { left: 70px; }
+    .window.right { right: 70px; }
+
+    /* Floor / rug */
+    .floor {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: repeating-linear-gradient(
+        90deg,
+        #d4a96a 0px, #d4a96a 10px,
+        #c9913c 10px, #c9913c 20px
+      );
+      border-top: 4px solid #8b5e3c;
+    }
+    .rug {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 30px;
+      background: radial-gradient(ellipse, #e84393 30%, #c0186e 100%);
+      border-radius: 50%;
+      border: 3px solid #8b1050;
+    }
+
+    /* Dog container – clickable */
+    #dog-btn {
+      position: absolute;
+      bottom: 55px;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.08s;
+      width: 120px;
+      height: 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #dog-btn:active { transform: translateX(-50%) scale(0.93); }
+
+    /* SVG dog */
+    .dog-svg { width: 120px; height: 120px; }
+
+    /* Tail wag animation */
+    #dog-tail {
+      transform-origin: 10px 4px;
+      animation: wag 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes wag {
+      from { transform: rotate(-18deg); }
+      to   { transform: rotate( 22deg); }
+    }
+
+    /* Click pop */
+    .pop {
+      position: absolute;
+      pointer-events: none;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ff4500;
+      animation: rise 0.8s ease-out forwards;
+    }
+    @keyframes rise {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-80px) scale(1.4); }
+    }
+
+    /* HUD */
+    .hud {
+      position: absolute;
+      top: -60px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 6px;
+    }
+    .hud-box {
+      background: rgba(255,255,255,0.85);
+      border: 3px solid #8b5e3c;
+      border-radius: 10px;
+      padding: 6px 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #5a2d0c;
+    }
+    #click-count { font-size: 1.1rem; }
+
+    /* Upgrade panel */
+    .upgrades {
+      margin-top: 12px;
+      background: rgba(255,255,255,0.82);
+      border: 3px solid #8b5e3c;
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+    .upgrades h3 {
+      color: #5a2d0c;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .upgrade-btn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 6px;
+      padding: 7px 12px;
+      background: #f5deb3;
+      border: 2px solid #8b5e3c;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #3d1f0a;
+      transition: background 0.15s;
+    }
+    .upgrade-btn:hover:not(:disabled) { background: #ffe4b0; }
+    .upgrade-btn:disabled { opacity: 0.45; cursor: default; }
+    .upgrade-btn .cost { color: #c0392b; font-weight: 700; }
+
+    /* Bark message */
+    #bark {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border: 2px solid #333;
+      border-radius: 12px;
+      padding: 4px 10px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #bark.show { opacity: 1; }
+    #bark::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #333;
+    }
+
+    /* Milestone toast */
+    #toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2c3e50;
+      color: #f0c040;
+      padding: 10px 22px;
+      border-radius: 20px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+      z-index: 999;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="scene">
+  <!-- HUD above house -->
+  <div class="hud">
+    <div class="hud-box">Treats: <span id="click-count">0</span></div>
+    <div class="hud-box">Per click: <span id="per-click">1</span></div>
+    <div class="hud-box">Per sec: <span id="per-sec">0</span></div>
+  </div>
+
+  <!-- Roof + chimney sit outside house div so they overlap -->
+  <div class="chimney"></div>
+  <div class="roof"></div>
+
+  <!-- House interior -->
+  <div class="house">
+    <div class="window left"></div>
+    <div class="window right"></div>
+    <div class="floor">
+      <div class="rug"></div>
+    </div>
+    <div class="door"></div>
+
+    <!-- Bark speech bubble -->
+    <div id="bark">Woof!</div>
+
+    <!-- The Dog -->
+    <div id="dog-btn" title="Click the dog!">
+      <svg class="dog-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <!-- Body -->
+        <ellipse cx="60" cy="82" rx="34" ry="24" fill="#c8a96e"/>
+        <!-- Head -->
+        <ellipse cx="60" cy="52" rx="26" ry="22" fill="#c8a96e"/>
+        <!-- Ear left -->
+        <ellipse cx="38" cy="40" rx="11" ry="16" fill="#a0784e" transform="rotate(-15 38 40)"/>
+        <!-- Ear right -->
+        <ellipse cx="82" cy="40" rx="11" ry="16" fill="#a0784e" transform="rotate(15 82 40)"/>
+        <!-- Snout -->
+        <ellipse cx="60" cy="62" rx="13" ry="9" fill="#e8c88e"/>
+        <!-- Nose -->
+        <ellipse cx="60" cy="57" rx="6" ry="4" fill="#3d2314"/>
+        <!-- Nostrils -->
+        <circle cx="57" cy="58" r="1.3" fill="#1a0a04"/>
+        <circle cx="63" cy="58" r="1.3" fill="#1a0a04"/>
+        <!-- Eyes -->
+        <circle cx="50" cy="46" r="6" fill="white"/>
+        <circle cx="70" cy="46" r="6" fill="white"/>
+        <circle cx="51" cy="47" r="3.5" fill="#2c1a0a"/>
+        <circle cx="71" cy="47" r="3.5" fill="#2c1a0a"/>
+        <!-- Eye shine -->
+        <circle cx="53" cy="45" r="1.2" fill="white"/>
+        <circle cx="73" cy="45" r="1.2" fill="white"/>
+        <!-- Mouth -->
+        <path d="M54 67 Q60 73 66 67" stroke="#3d2314" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Tongue -->
+        <ellipse cx="60" cy="70" rx="5" ry="4" fill="#e05080"/>
+        <!-- Front legs -->
+        <rect x="36" y="96" width="16" height="22" rx="7" fill="#c8a96e"/>
+        <rect x="68" y="96" width="16" height="22" rx="7" fill="#c8a96e"/>
+        <!-- Paws -->
+        <ellipse cx="44" cy="118" rx="9" ry="4" fill="#a0784e"/>
+        <ellipse cx="76" cy="118" rx="9" ry="4" fill="#a0784e"/>
+        <!-- Tail -->
+        <g id="dog-tail">
+          <path d="M94 85 Q110 65 108 50" stroke="#a0784e" stroke-width="9" fill="none" stroke-linecap="round"/>
+        </g>
+        <!-- Collar -->
+        <rect x="44" y="69" width="32" height="7" rx="3.5" fill="#e84040"/>
+        <rect x="57" y="70" width="6" height="5" rx="2" fill="#f0c040"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Upgrade shop -->
+  <div class="upgrades">
+    <h3>Shop</h3>
+    <button class="upgrade-btn" id="up-click" data-cost="10" data-lvl="0">
+      <span>Better Petting (+1/click)</span>
+      <span class="cost" id="up-click-cost">10 treats</span>
+    </button>
+    <button class="upgrade-btn" id="up-auto" data-cost="50" data-lvl="0">
+      <span>Auto Belly Rub (+1/sec)</span>
+      <span class="cost" id="up-auto-cost">50 treats</span>
+    </button>
+    <button class="upgrade-btn" id="up-auto2" data-cost="200" data-lvl="0">
+      <span>Treat Dispenser (+5/sec)</span>
+      <span class="cost" id="up-auto2-cost">200 treats</span>
+    </button>
+    <button class="upgrade-btn" id="up-click2" data-cost="150" data-lvl="0">
+      <span>Golden Leash (+5/click)</span>
+      <span class="cost" id="up-click2-cost">150 treats</span>
+    </button>
+    <button class="upgrade-btn" id="up-auto3" data-cost="500" data-lvl="0">
+      <span>Dog Park (+15/sec)</span>
+      <span class="cost" id="up-auto3-cost">500 treats</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  let treats = 0;
+  let perClick = 1;
+  let perSec = 0;
+
+  const countEl     = document.getElementById('click-count');
+  const perClickEl  = document.getElementById('per-click');
+  const perSecEl    = document.getElementById('per-sec');
+  const dogBtn      = document.getElementById('dog-btn');
+  const barkEl      = document.getElementById('bark');
+  const toastEl     = document.getElementById('toast');
+
+  const barks = ['Woof!', 'Arf!', 'Bork!', 'Ruff!', 'Yip!', 'Awoo~'];
+  let barkTimer;
+
+  const milestones = [10, 50, 100, 500, 1000, 5000, 10000];
+  let nextMilestone = 0;
+
+  function updateHUD() {
+    countEl.textContent  = Math.floor(treats);
+    perClickEl.textContent = perClick;
+    perSecEl.textContent   = perSec;
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 2200);
+  }
+
+  function checkMilestones() {
+    if (nextMilestone < milestones.length && treats >= milestones[nextMilestone]) {
+      showToast('🐶 ' + milestones[nextMilestone] + ' treats! Good boy!');
+      nextMilestone++;
+    }
+  }
+
+  function spawnPop(x, y) {
+    const pop = document.createElement('div');
+    pop.className = 'pop';
+    pop.textContent = '+' + perClick;
+    pop.style.left = x + 'px';
+    pop.style.top  = y + 'px';
+    document.body.appendChild(pop);
+    pop.addEventListener('animationend', () => pop.remove());
+  }
+
+  function showBark() {
+    barkEl.textContent = barks[Math.floor(Math.random() * barks.length)];
+    barkEl.classList.add('show');
+    clearTimeout(barkTimer);
+    barkTimer = setTimeout(() => barkEl.classList.remove('show'), 900);
+  }
+
+  // Click handler
+  dogBtn.addEventListener('click', (e) => {
+    treats += perClick;
+    updateHUD();
+    checkMilestones();
+    showBark();
+    const rect = dogBtn.getBoundingClientRect();
+    spawnPop(e.clientX - 18, e.clientY - 28);
+    updateButtons();
+  });
+
+  // Auto-production
+  setInterval(() => {
+    if (perSec > 0) {
+      treats += perSec / 20; // called 20× per second for smooth counter
+      updateHUD();
+      checkMilestones();
+      updateButtons();
+    }
+  }, 50);
+
+  // Upgrades
+  const upgrades = [
+    { id: 'up-click',  costId: 'up-click-cost',  baseCost: 10,  effect: () => { perClick += 1; },  label: (c) => c + ' treats' },
+    { id: 'up-auto',   costId: 'up-auto-cost',   baseCost: 50,  effect: () => { perSec   += 1; },  label: (c) => c + ' treats' },
+    { id: 'up-auto2',  costId: 'up-auto2-cost',  baseCost: 200, effect: () => { perSec   += 5; },  label: (c) => c + ' treats' },
+    { id: 'up-click2', costId: 'up-click2-cost', baseCost: 150, effect: () => { perClick += 5; },  label: (c) => c + ' treats' },
+    { id: 'up-auto3',  costId: 'up-auto3-cost',  baseCost: 500, effect: () => { perSec   += 15; }, label: (c) => c + ' treats' },
+  ];
+
+  upgrades.forEach(u => {
+    const btn = document.getElementById(u.id);
+    btn.addEventListener('click', () => {
+      const cost = parseInt(btn.dataset.cost);
+      if (treats < cost) return;
+      treats -= cost;
+      u.effect();
+      const lvl = parseInt(btn.dataset.lvl) + 1;
+      btn.dataset.lvl = lvl;
+      const newCost = Math.floor(cost * 1.6);
+      btn.dataset.cost = newCost;
+      document.getElementById(u.costId).textContent = newCost + ' treats';
+      updateHUD();
+      updateButtons();
+    });
+  });
+
+  function updateButtons() {
+    upgrades.forEach(u => {
+      const btn = document.getElementById(u.id);
+      btn.disabled = Math.floor(treats) < parseInt(btn.dataset.cost);
+    });
+  }
+
+  updateHUD();
+  updateButtons();
+</script>
+</body>
+</html>
