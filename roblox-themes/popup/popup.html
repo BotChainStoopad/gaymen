@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>RoTheme</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Ro<span>Theme</span></div>
+    <nav>
+      <button class="tab active" data-tab="themes">Themes</button>
+      <button class="tab" data-tab="playtime">Playtime</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <section id="themes" class="panel active">
+    <div id="theme-grid" class="grid"></div>
+    <p class="hint">Changes apply instantly on any open roblox.com tab.</p>
+  </section>
+
+  <section id="playtime" class="panel">
+    <div id="status" class="status">Checking…</div>
+    <div class="totals">
+      <div><b id="total-time">0m</b><span>total</span></div>
+      <div><b id="total-games">0</b><span>games</span></div>
+      <div><b id="total-sessions">0</b><span>sessions</span></div>
+    </div>
+    <div class="sort">
+      Sort:
+      <select id="sort">
+        <option value="seconds">Most played</option>
+        <option value="lastPlayed">Recently played</option>
+        <option value="sessions">Most sessions</option>
+      </select>
+    </div>
+    <ol id="game-list"></ol>
+    <p id="empty" class="hint">No playtime yet. Join a game while signed in to roblox.com in this browser and it will be tracked automatically (checked every minute).</p>
+  </section>
+
+  <section id="settings" class="panel">
+    <label class="toggle"><input type="checkbox" id="effects"> <span>Animated effects<small>Aero bubbles, vaporwave grid, CRT scanlines</small></span></label>
+    <label class="toggle"><input type="checkbox" id="retroWords"> <span>Era-accurate wording<small>Nav says "Games", "Catalog", "Avatar Shop" etc. on retro themes</small></span></label>
+    <label class="toggle"><input type="checkbox" id="showPlaytime"> <span>Playtime on game pages<small>Shows your hours under the game title</small></span></label>
+    <label class="toggle"><input type="checkbox" id="hideSponsored"> <span>Hide sponsored rows<small>Removes "Sponsored" carousels and ads</small></span></label>
+    <div class="row">
+      <button id="export" class="btn">Export playtime</button>
+      <button id="reset" class="btn danger">Reset playtime</button>
+    </div>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>

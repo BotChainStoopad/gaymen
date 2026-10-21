@@ -1,0 +1,78 @@
+/* Actually Classic — the 2008–2012 roblox.com look: blue bar, white boxes, grey borders, square corners. */
+html[data-rbxt="classic"] {
+  --rx-font: Arial, Verdana, Helvetica, sans-serif;
+  --rx-bg: #e8e8e8;
+  --rx-surface: #ffffff;
+  --rx-surface-2: #eeeeee;
+  --rx-border: #a7a7a7;
+  --rx-text: #000000;
+  --rx-text-2: #555555;
+  --rx-heading: #1a1a1a;
+  --rx-link: #0055b3;
+  --rx-header-bg: linear-gradient(to bottom, #4a9de5 0%, #1f6fc4 50%, #0b5cad 51%, #0a4f96 100%);
+  --rx-header-text: #ffffff;
+  --rx-nav-bg: #f6f6f6;
+  --rx-nav-text: #0055b3;
+  --rx-primary-bg: linear-gradient(to bottom, #6db3f2 0%, #2a7fd4 50%, #1e6fc0 51%, #2b84d8 100%);
+  --rx-primary-text: #ffffff;
+  --rx-primary-border: #0a4f96;
+  --rx-secondary-bg: linear-gradient(to bottom, #ffffff 0%, #e2e2e2 100%);
+  --rx-secondary-text: #222222;
+  --rx-play-bg: linear-gradient(to bottom, #8fd36b 0%, #4fae2b 50%, #3c9a1a 51%, #57b532 100%);
+  --rx-play-text: #ffffff;
+  --rx-input-bg: #ffffff;
+  --rx-radius: 0px;
+  --rx-shadow: none;
+}
+
+/* The old site had a centered white page on a grey background */
+html[data-rbxt="classic"] #container-main,
+html[data-rbxt="classic"] .container-main {
+  background-color: #ffffff !important;
+  border-left: 1px solid #a7a7a7 !important;
+  border-right: 1px solid #a7a7a7 !important;
+}
+
+html[data-rbxt="classic"] .section-content,
+html[data-rbxt="classic"] .game-main-content,
+html[data-rbxt="classic"] .profile-header {
+  border: 1px solid #a7a7a7 !important;
+}
+
+/* Section headers become the classic blue title strips */
+html[data-rbxt="classic"] .container-header h2,
+html[data-rbxt="classic"] .container-header h3 {
+  display: inline-block;
+  padding: 3px 10px !important;
+  background: linear-gradient(to bottom, #e8f2fc, #c4dcf5) !important;
+  border: 1px solid #8fb4dc !important;
+  color: #0a3d75 !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+}
+
+html[data-rbxt="classic"] #header .navbar,
+html[data-rbxt="classic"] #header {
+  border-bottom: 2px solid #063b75 !important;
+}
+
+html[data-rbxt="classic"] #header a,
+html[data-rbxt="classic"] .rbx-header a {
+  font-weight: bold !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-rbxt="classic"] #navigation a:hover {
+  text-decoration: underline !important;
+}
+
+html[data-rbxt="classic"] .btn-common-play-game-lg,
+html[data-rbxt="classic"] [data-testid="play-button"] {
+  border: 1px solid #2a6e10 !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+html[data-rbxt="classic"] .game-card-thumb-container,
+html[data-rbxt="classic"] .thumbnail-2d-container {
+  border: 1px solid #c3c3c3 !important;
+}

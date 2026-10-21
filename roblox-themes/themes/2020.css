@@ -1,0 +1,55 @@
+/* 2020 Roblox — the dark theme from the "Discover / Avatar Shop / Create / Robux" era. */
+html[data-rbxt="2020"] {
+  --rx-font: "HCo Gotham SSm", "Gotham SSm A", "Gotham SSm B", "Gotham", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --rx-bg: #232527;
+  --rx-surface: #393b3d;
+  --rx-surface-2: #2c2e30;
+  --rx-border: #4a4c4e;
+  --rx-text: #ffffff;
+  --rx-text-2: #bdbebe;
+  --rx-heading: #ffffff;
+  --rx-link: #33b5ff;
+  --rx-header-bg: #191b1d;
+  --rx-header-text: #ffffff;
+  --rx-nav-bg: #191b1d;
+  --rx-nav-text: #ffffff;
+  --rx-primary-bg: #00a2ff;
+  --rx-primary-text: #ffffff;
+  --rx-primary-border: #00a2ff;
+  --rx-secondary-bg: transparent;
+  --rx-secondary-text: #ffffff;
+  --rx-play-bg: #00b06f;
+  --rx-play-text: #ffffff;
+  --rx-input-bg: #191b1d;
+  --rx-radius: 8px;
+  --rx-shadow: none;
+}
+
+html[data-rbxt="2020"] [class*="btn-secondary-"],
+html[data-rbxt="2020"] [class*="btn-control-"] {
+  border: 1px solid #bdbebe !important;
+}
+
+html[data-rbxt="2020"] [class*="btn-primary-"]:hover {
+  background: #32b5ff !important;
+}
+
+html[data-rbxt="2020"] .btn-common-play-game-lg:hover,
+html[data-rbxt="2020"] [data-testid="play-button"]:hover {
+  background: #3fc679 !important;
+}
+
+/* 2020 game cards had square-ish thumbnails and bold white titles */
+html[data-rbxt="2020"] .game-card-name {
+  font-weight: 500 !important;
+}
+
+html[data-rbxt="2020"] .container-header h2 {
+  font-weight: 700 !important;
+  font-size: 20px !important;
+}
+
+html[data-rbxt="2020"] .game-card-thumb-container,
+html[data-rbxt="2020"] .thumbnail-2d-container {
+  border-radius: 8px 8px 0 0 !important;
+}

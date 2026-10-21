@@ -1,0 +1,66 @@
+/* Vaporwave — neon pink/cyan, sunset gradient, retro grid. */
+html[data-rbxt="vaporwave"] {
+  --rx-font: "Trebuchet MS", "Lucida Sans Unicode", "Segoe UI", sans-serif;
+  --rx-bg: #1a0533;
+  --rx-bg-image: linear-gradient(to bottom, #12002b 0%, #3b0a64 40%, #b3266e 75%, #ff8a5c 100%);
+  --rx-surface: rgba(30, 6, 60, 0.72);
+  --rx-surface-2: rgba(255, 113, 206, 0.18);
+  --rx-surface-filter: blur(6px);
+  --rx-border: #ff71ce;
+  --rx-text: #f5e9ff;
+  --rx-text-2: #c6a8ff;
+  --rx-heading: #01cdfe;
+  --rx-link: #05ffa1;
+  --rx-header-bg: linear-gradient(90deg, #ff71ce, #b967ff, #01cdfe);
+  --rx-header-text: #ffffff;
+  --rx-nav-bg: rgba(18, 0, 43, 0.85);
+  --rx-nav-text: #ff71ce;
+  --rx-primary-bg: linear-gradient(90deg, #ff71ce, #b967ff);
+  --rx-primary-text: #ffffff;
+  --rx-primary-border: #ff71ce;
+  --rx-secondary-bg: transparent;
+  --rx-secondary-text: #01cdfe;
+  --rx-play-bg: linear-gradient(90deg, #01cdfe, #05ffa1);
+  --rx-play-text: #12002b;
+  --rx-input-bg: rgba(18, 0, 43, 0.8);
+  --rx-radius: 4px;
+  --rx-shadow: 0 0 12px rgba(255, 113, 206, 0.45);
+  --rx-text-shadow: 0 0 8px rgba(1, 205, 254, 0.7);
+}
+
+html[data-rbxt="vaporwave"] #header a,
+html[data-rbxt="vaporwave"] .rbx-header a {
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.7) !important;
+  letter-spacing: 0.06em;
+}
+
+html[data-rbxt="vaporwave"][data-rbxt-fx="on"] body::before {
+  content: "";
+  position: fixed;
+  left: -50%;
+  right: -50%;
+  bottom: 0;
+  height: 45vh;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 113, 206, 0.55) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255, 113, 206, 0.55) 2px, transparent 2px);
+  background-size: 60px 60px;
+  transform: perspective(300px) rotateX(60deg);
+  transform-origin: bottom;
+  animation: rbxt-vapor-grid 3s linear infinite;
+  mask-image: linear-gradient(to top, #000 30%, transparent);
+  -webkit-mask-image: linear-gradient(to top, #000 30%, transparent);
+}
+
+html[data-rbxt="vaporwave"][data-rbxt-fx="on"] #wrap,
+html[data-rbxt="vaporwave"][data-rbxt-fx="on"] #container-main {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes rbxt-vapor-grid {
+  from { background-position: 0 0; }
+  to   { background-position: 0 60px; }
+}

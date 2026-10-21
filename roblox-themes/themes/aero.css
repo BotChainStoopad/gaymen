@@ -1,0 +1,99 @@
+/* Frutiger Aero — glossy glass, sky gradients, bubbles, aqua buttons. */
+html[data-rbxt="aero"] {
+  --rx-font: "Segoe UI", "Frutiger", "Frutiger Linotype", "Myriad Pro", "Helvetica Neue", Arial, sans-serif;
+  --rx-bg: #8fd3f4;
+  --rx-bg-image:
+    radial-gradient(ellipse at 15% 110%, rgba(126, 217, 87, 0.85) 0%, rgba(126, 217, 87, 0) 45%),
+    radial-gradient(ellipse at 85% 115%, rgba(76, 196, 90, 0.8) 0%, rgba(76, 196, 90, 0) 40%),
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 30%),
+    linear-gradient(to bottom, #2b9fe0 0%, #7fd0f5 45%, #d8f3ff 75%, #b6ea9a 100%);
+  --rx-surface: rgba(255, 255, 255, 0.42);
+  --rx-surface-2: rgba(255, 255, 255, 0.65);
+  --rx-surface-filter: blur(14px) saturate(160%);
+  --rx-border: rgba(255, 255, 255, 0.85);
+  --rx-text: #0b3550;
+  --rx-text-2: #2d5f7e;
+  --rx-heading: #063049;
+  --rx-link: #0066b3;
+  --rx-header-bg: linear-gradient(to bottom, rgba(255, 255, 255, 0.85) 0%, rgba(214, 240, 255, 0.7) 49%, rgba(160, 214, 245, 0.7) 50%, rgba(205, 238, 255, 0.8) 100%);
+  --rx-header-text: #063049;
+  --rx-nav-bg: rgba(255, 255, 255, 0.35);
+  --rx-nav-text: #063049;
+  --rx-primary-bg: linear-gradient(to bottom, #c8f1ff 0%, #5cc8f8 49%, #0d9ce4 50%, #45c4ff 100%);
+  --rx-primary-text: #ffffff;
+  --rx-primary-border: #0a7bc0;
+  --rx-secondary-bg: linear-gradient(to bottom, #ffffff 0%, #eaf6fd 49%, #d4ecfa 50%, #eef8ff 100%);
+  --rx-secondary-text: #063049;
+  --rx-play-bg: linear-gradient(to bottom, #d6ffb8 0%, #7edb4a 49%, #3fae12 50%, #74d93b 100%);
+  --rx-play-text: #ffffff;
+  --rx-input-bg: rgba(255, 255, 255, 0.75);
+  --rx-radius: 14px;
+  --rx-shadow: 0 4px 18px rgba(0, 70, 120, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --rx-text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+html[data-rbxt="aero"] #header,
+html[data-rbxt="aero"] .rbx-header {
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+html[data-rbxt="aero"] #navigation,
+html[data-rbxt="aero"] .rbx-left-col {
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-right: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Glossy buttons: white text with a soft shadow and a shine on top */
+html[data-rbxt="aero"] [class*="btn-primary-"],
+html[data-rbxt="aero"] [class*="btn-cta-"],
+html[data-rbxt="aero"] [class*="btn-growth-"],
+html[data-rbxt="aero"] .btn-common-play-game-lg,
+html[data-rbxt="aero"] [data-testid="play-button"] {
+  text-shadow: 0 1px 2px rgba(0, 60, 110, 0.55) !important;
+  box-shadow: 0 2px 8px rgba(0, 90, 160, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  border-radius: 999px !important;
+}
+
+html[data-rbxt="aero"] .btn-common-play-game-lg,
+html[data-rbxt="aero"] [data-testid="play-button"] {
+  border: 1px solid #2e8f0b !important;
+}
+
+html[data-rbxt="aero"] .game-card-thumb-container,
+html[data-rbxt="aero"] .thumbnail-2d-container {
+  box-shadow: 0 3px 10px rgba(0, 70, 120, 0.25) !important;
+}
+
+/* Floating bubbles (Effects toggle) */
+html[data-rbxt="aero"][data-rbxt-fx="on"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0 6%, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.45) 68%, rgba(255,255,255,0) 71%),
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0 6%, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.45) 68%, rgba(255,255,255,0) 71%),
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0 6%, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.45) 68%, rgba(255,255,255,0) 71%),
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0 6%, rgba(255,255,255,0.15) 30%, rgba(255,255,255,0.45) 68%, rgba(255,255,255,0) 71%);
+  background-size: 90px 90px, 50px 50px, 130px 130px, 36px 36px;
+  background-position: 6% 80%, 92% 70%, 75% 105%, 20% 40%;
+  background-repeat: no-repeat;
+  animation: rbxt-aero-float 18s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+
+html[data-rbxt="aero"][data-rbxt-fx="on"] #wrap,
+html[data-rbxt="aero"][data-rbxt-fx="on"] #container-main {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes rbxt-aero-float {
+  0%   { background-position: 6% 80%, 92% 70%, 75% 105%, 20% 40%; }
+  50%  { background-position: 9% 55%, 88% 45%, 72% 80%, 24% 20%; }
+  100% { background-position: 5% 30%, 94% 25%, 78% 60%, 18% 5%; }
+}

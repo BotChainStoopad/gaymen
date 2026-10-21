@@ -1,0 +1,154 @@
+* { box-sizing: border-box; }
+
+body {
+  width: 360px;
+  margin: 0;
+  font: 13px/1.4 "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: #f4f7fb;
+  color: #1d2733;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 12px 14px 0;
+  background: linear-gradient(135deg, #1b8ef2, #6a5cff);
+  color: #fff;
+}
+
+.logo { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+.logo span { opacity: 0.8; font-weight: 600; }
+
+nav { display: flex; gap: 4px; margin-top: 10px; }
+
+.tab {
+  flex: 1;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab.active { background: #f4f7fb; color: #1d2733; }
+
+.panel { display: none; padding: 12px 14px 14px; }
+.panel.active { display: block; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.theme {
+  position: relative;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  overflow: hidden;
+}
+.theme:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); }
+.theme.selected { border-color: #1b8ef2; }
+.theme.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #1b8ef2;
+  color: #fff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* Mini mock of a Roblox page drawn with the theme's colours */
+.preview { height: 64px; position: relative; }
+.preview .bar { position: absolute; top: 0; left: 0; right: 0; height: 12px; }
+.preview .card { position: absolute; top: 20px; width: 26px; height: 30px; border-radius: 4px; }
+.preview .card:nth-child(2) { left: 8px; }
+.preview .card:nth-child(3) { left: 40px; }
+.preview .card:nth-child(4) { left: 72px; }
+.preview .play { position: absolute; right: 8px; bottom: 8px; width: 40px; height: 14px; border-radius: 4px; }
+
+.theme .name { display: block; padding: 6px 8px 0; font-weight: 700; }
+.theme .desc { display: block; padding: 0 8px 7px; font-size: 11px; color: #67768a; }
+
+.hint { margin: 10px 0 0; font-size: 11px; color: #67768a; }
+
+.status {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.status.live { background: #e3f9ee; color: #0a6b42; font-weight: 600; }
+
+.totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0; }
+.totals div {
+  padding: 8px;
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.totals b { display: block; font-size: 16px; }
+.totals span { font-size: 11px; color: #67768a; }
+
+.sort { display: flex; align-items: center; gap: 6px; justify-content: flex-end; font-size: 12px; color: #67768a; }
+.sort select { font: inherit; padding: 2px 4px; border-radius: 6px; border: 1px solid #ccd5e0; }
+
+#game-list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 300px; overflow-y: auto; }
+
+.game {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px;
+  border-radius: 8px;
+}
+.game:hover { background: #fff; }
+.game img, .game .noicon { width: 40px; height: 40px; border-radius: 8px; background: #dde4ec; object-fit: cover; }
+.game a { color: #1d2733; font-weight: 600; text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.game a:hover { text-decoration: underline; }
+.game .meta { font-size: 11px; color: #67768a; }
+.game .bar { height: 4px; margin-top: 3px; border-radius: 2px; background: linear-gradient(90deg, #1b8ef2, #6a5cff); }
+.game .time { font-weight: 700; white-space: nowrap; }
+
+.toggle {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 9px 10px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+.toggle input { margin-top: 3px; accent-color: #1b8ef2; }
+.toggle span { font-weight: 600; }
+.toggle small { display: block; font-weight: 400; color: #67768a; }
+
+.row { display: flex; gap: 8px; margin-top: 10px; }
+.btn {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccd5e0;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover { background: #eef3f8; }
+.btn.danger { color: #c0262d; border-color: #f0b8bb; }

@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "RoTheme — Custom Roblox Themes",
+  "version": "1.0.0",
+  "description": "Retro and custom themes for roblox.com (Classic, Frutiger Aero, 2020 and more) plus a per-game playtime tracker.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "RoTheme",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "alarms"],
+  "host_permissions": [
+    "https://*.roblox.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.roblox.com/*", "https://web.roblox.com/*"],
+      "run_at": "document_start",
+      "css": [
+        "themes/base.css",
+        "themes/classic.css",
+        "themes/aero.css",
+        "themes/2020.css",
+        "themes/2016.css",
+        "themes/vaporwave.css",
+        "themes/midnight.css",
+        "themes/terminal.css",
+        "themes/bubblegum.css"
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}

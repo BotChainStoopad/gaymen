@@ -1,0 +1,31 @@
+/* Midnight OLED — true black with a purple accent. Easy on the eyes at night. */
+html[data-rbxt="midnight"] {
+  --rx-font: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --rx-bg: #000000;
+  --rx-surface: #0d0d10;
+  --rx-surface-2: #17171c;
+  --rx-border: #23232b;
+  --rx-text: #e8e6f0;
+  --rx-text-2: #8d8a9c;
+  --rx-heading: #ffffff;
+  --rx-link: #a78bfa;
+  --rx-header-bg: #000000;
+  --rx-header-text: #e8e6f0;
+  --rx-nav-bg: #000000;
+  --rx-nav-text: #e8e6f0;
+  --rx-primary-bg: #7c3aed;
+  --rx-primary-text: #ffffff;
+  --rx-primary-border: #7c3aed;
+  --rx-secondary-bg: #17171c;
+  --rx-secondary-text: #e8e6f0;
+  --rx-play-bg: #7c3aed;
+  --rx-play-text: #ffffff;
+  --rx-input-bg: #0d0d10;
+  --rx-radius: 12px;
+  --rx-shadow: none;
+}
+
+html[data-rbxt="midnight"] .btn-common-play-game-lg,
+html[data-rbxt="midnight"] [data-testid="play-button"] {
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.55) !important;
+}
