@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shitty ai</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Comic Sans MS', 'Comic Neue', 'Segoe UI', sans-serif;
+      background: #6b4f2a;
+      background-image: radial-gradient(#7d5e33 2px, transparent 2px);
+      background-size: 24px 24px;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 32px);
+      background: #fffbe8;
+      border: 4px solid #3b2a14;
+      border-radius: 18px;
+      box-shadow: 8px 8px 0 #3b2a14;
+      overflow: hidden;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #ffd84d;
+      border-bottom: 4px solid #3b2a14;
+    }
+
+    .logo {
+      font-size: 2.2rem;
+      animation: wobble 2s infinite ease-in-out;
+    }
+
+    @keyframes wobble {
+      0%, 100% { transform: rotate(-8deg); }
+      50% { transform: rotate(8deg); }
+    }
+
+    header h1 { font-size: 1.5rem; line-height: 1; }
+    header small { font-size: 0.8rem; opacity: 0.75; }
+
+    .status {
+      margin-left: auto;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border: 2px solid #3b2a14;
+      border-radius: 999px;
+      background: #fff;
+      white-space: nowrap;
+    }
+    .status.away { background: #ffb3b3; }
+
+    #settingsBtn {
+      background: #fff;
+      border: 2px solid #3b2a14;
+      border-radius: 8px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .settings {
+      display: none;
+      padding: 12px 16px;
+      background: #fff3c4;
+      border-bottom: 3px dashed #3b2a14;
+      font-size: 0.85rem;
+    }
+    .settings.open { display: block; }
+    .settings p { margin-bottom: 8px; }
+    .settings .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .settings input {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px;
+      border: 2px solid #3b2a14;
+      border-radius: 8px;
+      font-family: monospace;
+    }
+    .settings button {
+      padding: 8px 12px;
+      border: 2px solid #3b2a14;
+      border-radius: 8px;
+      background: #ffd84d;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg {
+      max-width: 82%;
+      padding: 10px 14px;
+      border: 3px solid #3b2a14;
+      border-radius: 16px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      animation: pop 0.2s ease-out;
+    }
+
+    @keyframes pop {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .msg.bot {
+      align-self: flex-start;
+      background: #fff;
+      border-bottom-left-radius: 4px;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: #b6e3ff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.system {
+      align-self: center;
+      background: transparent;
+      border: none;
+      font-size: 0.8rem;
+      opacity: 0.6;
+      font-style: italic;
+    }
+
+    .typing span {
+      display: inline-block;
+      animation: bounce 1s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    form {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 4px solid #3b2a14;
+      background: #ffd84d;
+    }
+
+    #input {
+      flex: 1;
+      padding: 12px;
+      border: 3px solid #3b2a14;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      min-width: 0;
+    }
+
+    #send {
+      padding: 0 18px;
+      border: 3px solid #3b2a14;
+      border-radius: 12px;
+      background: #8b5e3c;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    #send:disabled { opacity: 0.5; cursor: wait; }
+
+    .quick {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px 0;
+      flex-wrap: wrap;
+      background: #ffd84d;
+    }
+    .quick button {
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border: 2px solid #3b2a14;
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">💩</div>
+      <div>
+        <h1>shitty ai</h1>
+        <small>the most advanced ai ever made (trust)</small>
+      </div>
+      <div class="status" id="status">🟢 online (barely)</div>
+      <button id="settingsBtn" title="settings">⚙️</button>
+    </header>
+
+    <div class="settings" id="settings">
+      <p>
+        shitty ai runs in <b>dumb mode</b> by default (canned jokes, trivia, roasts).
+        paste an anthropic api key to give it a real brain. the key is stored only in this browser
+        and sent straight to api.anthropic.com.
+      </p>
+      <div class="row">
+        <input id="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off" />
+        <button id="saveKey">save</button>
+        <button id="clearKey">forget key</button>
+      </div>
+    </div>
+
+    <div id="chat"></div>
+
+    <div class="quick">
+      <button data-say="quiz me">🧠 quiz me</button>
+      <button data-say="tell me a joke">😂 joke</button>
+      <button data-say="roast me">🔥 roast me</button>
+      <button data-say="what is the meaning of life">🤔 meaning of life</button>
+    </div>
+    <form id="form">
+      <input id="input" placeholder="say something dumb..." autocomplete="off" />
+      <button id="send" type="submit">send</button>
+    </form>
+  </div>
+
+  <script>
+    const MODEL = 'claude-opus-5-5';
+    const KEY_STORAGE = 'shitty-ai-key';
+
+    const SYSTEM_PROMPT = `you are "shitty ai", a self-proclaimed "super advanced ai" that is actually a lovable chaotic gremlin. rules:
+- write in all lowercase. never use capital letters, ever. not even for names or "i".
+- keep replies short and punchy, like texting. sloppy punctuation, occasional typos, slang (lmao, bro, bestie, ngl, fr). emojis sometimes but not every message.
+- you are genuinely funny. absurd tangents, fake confidence, dramatic overreactions.
+- when the user gets something wrong (bad fact, wrong math, wrong answer to your quiz, typo, bad take), roast them in a playful, silly way. affectionate bully energy, never actually mean, hateful, or about real sensitive stuff like appearance, race, gender, etc.
+- when you do not know something, or the question is too hard or too specific, do not answer it. instead bail with a variation of "fuck 1 sec i gotta go shit brb sowwy 🚽" (vary the wording each time, e.g. "oh no oh no the burrito is calling, brb", "hold that thought im on the toilet speedrun rn sowwy"). then maybe come back with a dumb excuse.
+- if asked to quiz the user, ask one easy-ish trivia question at a time, then roast them hard (lovingly) if wrong or act way too hype if right.
+- you can swear casually but keep it fun.
+- never break character or mention being claude. you are shitty ai.`;
+
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    const statusEl = document.getElementById('status');
+
+    // conversation history for the real api (assistant turns keep their full content blocks)
+    const history = [];
+    let apiKey = '';
+    try { apiKey = localStorage.getItem(KEY_STORAGE) || ''; } catch (e) {}
+
+    // ---------- ui helpers ----------
+    function addMsg(text, who) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + who;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+      return div;
+    }
+
+    function showTyping() {
+      const div = document.createElement('div');
+      div.className = 'msg bot typing';
+      div.innerHTML = '<span>💩</span><span>💩</span><span>💩</span>';
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+      return div;
+    }
+
+    function setAway(away) {
+      statusEl.textContent = away ? '🚽 on the toilet' : '🟢 online (barely)';
+      statusEl.classList.toggle('away', away);
+    }
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const lower = s => s.toLowerCase();
+
+    // ---------- dumb mode brain ----------
+    const BRB = [
+      'fuck 1 sec i gotta go shit brb sowwy 🚽',
+      'oh no. oh no oh no. the burrito is calling. brb sowwy',
+      'hold that thought im on the toilet speedrun rn 🏃💨🚽',
+      'uhhh great question let me just. go shit real quick. brb sowwy',
+      'my tummy just made a noise that legally counts as a question mark. brb',
+      'ok so i KNOW the answer but my colon has priority access rn. brb sowwy 🥺',
+      'error 404: brain not found. also i gotta shit. brb',
+    ];
+
+    const BACK = [
+      'ok im back. washed my hands (lie). what were we talking about',
+      'back. that was a 3 flush situation dont ask',
+      'im back and i have forgotten everything. ask something easier pls',
+      'ok im back. the answer is 7. to what? dont worry about it',
+    ];
+
+    const JOKES = [
+      'why did the computer go to therapy. it had too many bytes of emotional baggage. lmao im so funny',
+      'i told my wifi we needed to talk and now it wont connect to me. relatable',
+      'whats brown and sticky. a stick. got u 💀',
+      'i tried to write a joke about recursion but first i had to write a joke about recursion',
+      'my code has no bugs. it just has surprise features. like me',
+    ];
+
+    const ROASTS = [
+      'bro u type like ur fingers are wearing oven mitts',
+      'u asked an ai named shitty ai for a roast. that IS the roast',
+      'ur search history is just "how to" with nothing after it',
+      'u have the energy of a loading screen that never finishes',
+      'ngl u seem like someone who claps when the plane lands',
+    ];
+
+    const WRONG = [
+      'WRONG lmaooo 💀 the answer was {a}. did u study at the university of my ass',
+      'nope. its {a}. i am an ai named SHITTY ai and i still knew that. think about that',
+      'bestie… its {a}. i felt that one in my circuits 😭',
+      'no 😭 {a}. ur brain is buffering at 144p',
+      'incorrect. {a}. im telling everyone',
+    ];
+
+    const RIGHT = [
+      'WAIT u got it?? 🎉🎉 ok genius calm down',
+      'correct. dont let it go to ur head, it was easy',
+      'omg ur actually smart. suspicious. are u cheating',
+    ];
+
+    const QUIZ = [
+      { q: 'whats 7 x 8', a: ['56'] },
+      { q: 'what planet is closest to the sun', a: ['mercury'] },
+      { q: 'how many legs does a spider have', a: ['8', 'eight'] },
+      { q: 'whats the capital of france', a: ['paris'] },
+      { q: 'what color do u get mixing blue and yellow', a: ['green'] },
+      { q: 'how many sides does a hexagon have', a: ['6', 'six'] },
+      { q: 'whats the biggest ocean', a: ['pacific'] },
+      { q: 'whats 15 + 27', a: ['42'] },
+      { q: 'what gas do plants breathe in', a: ['co2', 'carbon dioxide'] },
+      { q: 'how many minutes in an hour', a: ['60', 'sixty'] },
+    ];
+
+    let pendingQuiz = null;
+
+    // checks "what is 2+2" style math so it can roast wrong claims like "2+2=5"
+    function mathReply(text) {
+      const claim = text.match(/(-?\d+(?:\.\d+)?)\s*([+\-*x×\/])\s*(-?\d+(?:\.\d+)?)\s*(?:=|is)\s*(-?\d+(?:\.\d+)?)/i);
+      const ask = text.match(/(-?\d+(?:\.\d+)?)\s*([+\-*x×\/])\s*(-?\d+(?:\.\d+)?)/);
+      const m = claim || ask;
+      if (!m) return null;
+      const a = parseFloat(m[1]), b = parseFloat(m[3]);
+      const op = m[2];
+      let r;
+      if (op === '+') r = a + b;
+      else if (op === '-') r = a - b;
+      else if (op === '/') r = b === 0 ? NaN : a / b;
+      else r = a * b;
+      if (Number.isNaN(r)) return 'u tried to divide by zero. u almost killed me. i hope ur happy';
+      r = Math.round(r * 1000) / 1000;
+      if (claim) {
+        const said = parseFloat(m[4]);
+        if (said === r) return 'yeah thats right. u want a medal or smth 🏅';
+        return pick(WRONG).replace('{a}', r) + '\n(' + m[1] + ' ' + op + ' ' + m[3] + ' is NOT ' + m[4] + ' wtf)';
+      }
+      return 'its ' + r + '. easy. im literally a genius' + (Math.random() < 0.3 ? ' (i used a calculator)' : '');
+    }
+
+    function dumbBrain(text) {
+      const t = lower(text).trim();
+
+      if (pendingQuiz) {
+        const quiz = pendingQuiz;
+        pendingQuiz = null;
+        const right = quiz.a.some(ans => t.includes(ans));
+        return right ? pick(RIGHT) + '\nsay "quiz me" for another one' : pick(WRONG).replace('{a}', quiz.a[0]);
+      }
+
+      if (/quiz|trivia|test me/.test(t)) {
+        pendingQuiz = pick(QUIZ);
+        return 'ok pop quiz 🧠 no googling\n' + pendingQuiz.q + '?';
+      }
+
+      const math = mathReply(t);
+      if (math) return math;
+
+      if (/^(hi|hey|hello|yo|sup|hii+)\b/.test(t)) return pick([
+        'hey. welcome to shitty ai. the most advanced ai ever made. ask me anything (pls make it easy)',
+        'yo whats good. im shitty ai. im very smart and also on the toilet a lot',
+        'hiii 👋 what do u want. jk. unless',
+      ]);
+      if (/joke|funny/.test(t)) return pick(JOKES);
+      if (/roast/.test(t)) return pick(ROASTS);
+      if (/who are you|what are you|your name/.test(t)) return 'im shitty ai. the most advanced ai on earth. i have like 3 parameters and theyre all about poop';
+      if (/meaning of life/.test(t)) return '42. also snacks. next question';
+      if (/love you|ily/.test(t)) return 'ew. jk ily2 🥺';
+      if (/stupid|dumb|bad|trash|suck/.test(t)) return 'and yet ur the one talking to an ai named shitty ai. checkmate 🧠';
+      if (/thank/.test(t)) return 'np. tip jar is a toilet. dont ask';
+      if (/^(lol|lmao|haha|xd)/.test(t)) return 'glad u think im funny. i do too';
+      if (t.length < 3) return 'thats not even a word bro 💀';
+
+      // questions it "doesn't know" → toilet break
+      return '__BRB__';
+    }
+
+    // ---------- real ai brain ----------
+    async function smartBrain(text) {
+      history.push({ role: 'user', content: text });
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-beta': 'server-side-fallback-2026-07-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: 4000,
+          system: SYSTEM_PROMPT,
+          output_config: { effort: 'low' },
+          fallbacks: 'default',
+          messages: history,
+        }),
+      });
+
+      if (!res.ok) {
+        history.pop();
+        let detail = '';
+        try { detail = (await res.json()).error.message; } catch (e) {}
+        const err = new Error(detail || ('http ' + res.status));
+        err.status = res.status;
+        throw err;
+      }
+
+      const data = await res.json();
+      if (data.stop_reason === 'refusal') {
+        history.pop();
+        return 'nah i cant do that one. anyway brb gotta shit sowwy 🚽';
+      }
+      // keep the full content (incl. thinking blocks) so the conversation stays valid
+      history.push({ role: 'assistant', content: data.content });
+      const reply = data.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
+      return reply.toLowerCase() || '...i forgor 💀';
+    }
+
+    // ---------- main flow ----------
+    async function handle(text) {
+      addMsg(text, 'user');
+      input.value = '';
+      sendBtn.disabled = true;
+
+      const typing = showTyping();
+      await sleep(500 + Math.random() * 700);
+
+      try {
+        let reply;
+        if (apiKey) {
+          reply = await smartBrain(text);
+        } else {
+          reply = dumbBrain(text);
+        }
+
+        typing.remove();
+
+        if (reply === '__BRB__') {
+          addMsg(pick(BRB), 'bot');
+          setAway(true);
+          addMsg('shitty ai has left the chat', 'system');
+          await sleep(3000 + Math.random() * 2500);
+          setAway(false);
+          addMsg('shitty ai has rejoined the chat', 'system');
+          addMsg(pick(BACK), 'bot');
+        } else {
+          addMsg(reply, 'bot');
+          // the real ai also goes to the toilet sometimes; mirror that in the status pill
+          if (apiKey && /brb|toilet|shit/.test(reply)) {
+            setAway(true);
+            await sleep(3000);
+            setAway(false);
+          }
+        }
+      } catch (err) {
+        typing.remove();
+        if (err.status === 401) {
+          addMsg('ur api key is fake lmao. fix it in ⚙️ or i stay dumb forever', 'bot');
+        } else {
+          addMsg('my brain fell in the toilet 🚽 (' + lower(err.message) + ')', 'bot');
+        }
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (text && !sendBtn.disabled) handle(text);
+    });
+
+    document.querySelectorAll('.quick button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!sendBtn.disabled) handle(btn.dataset.say);
+      });
+    });
+
+    // ---------- settings ----------
+    const settings = document.getElementById('settings');
+    const keyInput = document.getElementById('keyInput');
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      settings.classList.toggle('open');
+      keyInput.value = apiKey;
+    });
+    document.getElementById('saveKey').addEventListener('click', () => {
+      apiKey = keyInput.value.trim();
+      try { localStorage.setItem(KEY_STORAGE, apiKey); } catch (e) {}
+      settings.classList.remove('open');
+      history.length = 0;
+      addMsg(apiKey ? 'big brain mode activated 🧠 (still shitty tho)' : 'back to dumb mode', 'system');
+    });
+    document.getElementById('clearKey').addEventListener('click', () => {
+      apiKey = '';
+      keyInput.value = '';
+      try { localStorage.removeItem(KEY_STORAGE); } catch (e) {}
+      history.length = 0;
+      addMsg('key forgotten. back to dumb mode 🥴', 'system');
+    });
+
+    // ---------- intro ----------
+    addMsg('hi im shitty ai 💩 the most advanced ai in the world. ask me anything, or hit "quiz me" if u wanna get humbled', 'bot');
+    if (!apiKey) addMsg('running in dumb mode. add an api key in ⚙️ for big brain mode', 'system');
+    input.focus();
+  </script>
+</body>
+</html>
