@@ -67,6 +67,15 @@ h2{font-size:32px;font-weight:normal;margin-bottom:20px}
 #chatlog div{background:rgba(0,0,0,.45);padding:0 4px;text-shadow:2px 2px 0 #3f3f3f;transition:opacity 1s}
 #chatinput{position:fixed;left:4px;right:4px;bottom:4px;height:30px;background:rgba(0,0,0,.55);border:none;outline:none;color:#fff;font-family:'VT323',monospace;font-size:24px;padding:0 6px;display:none;z-index:30}
 #underwater{position:fixed;inset:0;background:rgba(20,50,160,.25);pointer-events:none;display:none;z-index:4}
+.plist{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:700px){.plist{grid-template-columns:repeat(2,1fr)}}
+.pcard{background:#8b8b8b;box-shadow:inset 2px 2px 0 #373737,inset -2px -2px 0 #fff;padding:8px;cursor:pointer;text-align:center;color:#fff;text-shadow:2px 2px 0 #3f3f3f}
+.pcard:hover{background:#a0a8d8}
+.pcard.here{background:#6a8f5a;cursor:default}
+.pcard canvas{width:96px;height:96px;image-rendering:auto;display:block;margin:0 auto 4px}
+.pcard .pn{font-size:26px}.pcard .pg{font-size:18px;color:#ffff9a}.pcard .pd{font-size:17px;line-height:17px;color:#eee}
+#warp{position:fixed;inset:0;pointer-events:none;z-index:45;opacity:0;background:radial-gradient(circle,#fff 0%,#c58cff 30%,#3b0b7a 70%,#000 100%);transition:opacity .5s}
+#planettitle{position:fixed;left:0;right:0;top:22%;text-align:center;font-size:64px;color:#fff;z-index:6;pointer-events:none;opacity:0;transition:opacity 1s}
 #hurt{position:fixed;inset:0;background:rgba(255,0,0,.25);pointer-events:none;opacity:0;transition:opacity .3s;z-index:4}
 #clicktoplay{position:fixed;inset:0;z-index:15;display:none;align-items:center;justify-content:center;font-size:36px;background:rgba(0,0,0,.35);cursor:pointer}
 #clicktoplay.show{display:flex}
@@ -135,6 +144,16 @@ h2{font-size:32px;font-weight:normal;margin-bottom:20px}
   <div id="loadbar"><div></div></div>
 </div>
 
+<div id="planets" class="screen dim">
+  <div class="panel" style="max-width:760px">
+    <div class="ttl" style="font-size:30px;text-align:center">Planet Teleporter</div>
+    <div class="ttl" style="text-align:center;color:#555;margin-bottom:10px">Choose a destination</div>
+    <div id="planetlist" class="plist"></div>
+    <div style="text-align:center;margin-top:10px"><button class="btn" id="b-pclose" style="width:240px">Cancel</button></div>
+  </div>
+</div>
+<div id="warp"></div>
+<div id="planettitle" class="mc-text"></div>
 <div id="pause" class="screen dim">
   <h2 class="mc-text">Game Menu</h2>
   <button class="btn" id="b-resume">Back to Game</button>
@@ -354,6 +373,25 @@ function buildTextures(){
   tex('brown_mushroom',P=>{plantBase(P);for(let y=10;y<16;y++){P.set(7,y,[220,210,190]);P.set(8,y,[200,190,170]);}for(let y=6;y<10;y++){const w=y===6?2:y===7?4:5;for(let x=8-w;x<8+w;x++)P.set(x,y,P.v(y===9?[120,88,62]:[154,114,82],0.08));}});
   tex('red_mushroom',P=>{plantBase(P);for(let y=10;y<16;y++){P.set(7,y,[220,210,190]);P.set(8,y,[200,190,170]);}for(let y=5;y<10;y++){const w=y===5?2:y===6?4:5;for(let x=8-w;x<8+w;x++)P.set(x,y,P.v([206,30,30],0.08));}[[6,6],[9,7],[5,8],[10,9],[7,8]].forEach(([x,y])=>P.set(x,y,[250,240,230]));});
   tex('furnace_front_lit',P=>{smoothStone(P);for(let y=8;y<14;y++)for(let x=4;x<12;x++)P.set(x,y,(y===8||x===4||x===11)?[60,60,60]:(y>10?P.v([255,150,30],0.2):P.v([255,220,90],0.2)));for(let x=4;x<12;x++){P.set(x,3,[84,84,84]);P.set(x,5,[84,84,84]);}for(let x=4;x<12;x+=2)P.set(x,4,[60,60,60]);});
+  // ---- planet blocks ----
+  const swirl=(P,frame)=>P.fill((x,y)=>{const dx=x-7.5,dy=y-7.5,r=Math.hypot(dx,dy),e=Math.max(Math.abs(dx),Math.abs(dy));
+    if(e>6.5)return P.v((x+y)%3?[28,20,40]:[44,32,64],0.15);if(e>5.5&&frame)return [120,60,200];
+    const a=Math.atan2(dy,dx);const v=Math.sin(a*3+r*1.25)*0.5+0.5;const c=mix([110,30,190],[60,230,255],v);return shade(c,1.15-r/9);});
+  tex('teleporter_side',P=>swirl(P,true));
+  tex('teleporter_top',P=>{swirl(P,false);for(let i=0;i<16;i++){const a=i/16*Math.PI*2;P.set(7.5+Math.cos(a)*4.6,7.5+Math.sin(a)*4.6,[220,250,255]);}P.set(7,7,[255,255,255]);P.set(8,8,[255,255,255]);P.set(8,7,[200,255,255]);P.set(7,8,[200,255,255]);});
+  const dust=(base,sp)=>P=>P.fill(()=>{const v=P.r();return v<0.1?shade(base,0.82):v>0.92?shade(base,1.12):v<0.14&&sp?sp:P.v(base,0.07);});
+  tex('moon_regolith',dust([170,170,168],[120,120,122]));
+  tex('moon_rock',P=>{stoneDraw(P,[104,104,108]);for(let i=0;i<4;i++){const x=2+P.r()*11|0,y=2+P.r()*11|0;P.set(x,y,[70,70,74]);P.set(x+1,y,[80,80,84]);P.set(x,y+1,[130,130,134]);}});
+  tex('mars_sand',dust([182,92,52],[140,62,36]));
+  tex('mars_rock',P=>stoneDraw(P,[128,60,40]));
+  tex('jovian_crust',P=>{const rows=[];for(let y=0;y<16;y++)rows.push(pick(P,[[200,140,90],[176,110,66],[222,186,140],[150,92,60],[210,160,110]]));P.fill((x,y)=>P.v(rows[(y+((x>>2)%2&&P.r()<0.3?1:0))&15],0.07));});
+  tex('jovian_rock',P=>stoneDraw(P,[96,64,44]));
+  tex('storm_crystal',P=>vor(P,9,(t,d)=>P.v(mix([255,120,60],[255,230,170],t*0.6+d*0.05),0.08),[150,30,20],0.7));
+  tex('saturn_dust',dust([226,206,150],[196,172,116]));
+  tex('saturn_rock',P=>stoneDraw(P,[160,142,104]));
+  tex('ring_ice',P=>vor(P,8,(t,d)=>P.v(mix([226,240,255],[160,196,236],t*0.7+d*0.04),0.05),[120,150,190],0.6));
+  tex('neptune_ice',P=>{P.fill(()=>P.v([40,82,190],0.08));for(let i=0;i<6;i++){let x=P.r()*16|0,y=P.r()*16|0;for(let k=0;k<5;k++)P.set(x+k,y-k,[120,170,250]);}});
+  tex('neptune_slush',dust([110,150,232],[200,220,255]));
 }
 
 // =====================================================================
@@ -437,6 +475,19 @@ function setupBlocks(){
   def(67,'amber_glass','Amber Glass',{tex:'amber_glass',render:'trans',cullSelf:true,hardness:0.3,sound:'glass',drop:0});
   def(68,'brown_mushroom','Brown Mushroom',{tex:'brown_mushroom',render:'cross',hardness:0,sound:'grass'});
   def(69,'red_mushroom','Red Mushroom',{tex:'red_mushroom',render:'cross',hardness:0,sound:'grass'});
+  def(70,'planet_teleporter','Planet Teleporter',{tex:{top:'teleporter_top',bottom:'teleporter_top',side:'teleporter_side'},hardness:3,emit:15,sound:'glass'});
+  def(71,'moon_regolith','Lunar Regolith',{tex:'moon_regolith',hardness:0.5,sound:'sand'});
+  def(72,'moon_rock','Moon Rock',{tex:'moon_rock',hardness:1.5});
+  def(73,'mars_sand','Martian Sand',{tex:'mars_sand',hardness:0.5,sound:'sand'});
+  def(74,'mars_rock','Martian Rock',{tex:'mars_rock',hardness:1.5});
+  def(75,'jovian_crust','Jovian Crust',{tex:'jovian_crust',hardness:0.8,sound:'gravel'});
+  def(76,'jovian_rock','Jovian Rock',{tex:'jovian_rock',hardness:1.5});
+  def(77,'storm_crystal','Storm Crystal',{tex:'storm_crystal',hardness:0.6,sound:'glass',emit:12});
+  def(78,'saturn_dust','Saturnian Dust',{tex:'saturn_dust',hardness:0.5,sound:'sand'});
+  def(79,'saturn_rock','Saturnian Rock',{tex:'saturn_rock',hardness:1.5});
+  def(80,'ring_ice','Ring Ice',{tex:'ring_ice',hardness:0.6,sound:'glass'});
+  def(81,'neptune_ice','Neptunian Ice',{tex:'neptune_ice',hardness:1,sound:'glass'});
+  def(82,'neptune_slush','Methane Slush',{tex:'neptune_slush',hardness:0.4,sound:'snow'});
   // ---- items (never placed in the world) ----
   const it=(id,key,name,o)=>def(id,key,name,Object.assign({tex:key,render:'item',hardness:0,sound:'none'},o));
   it(128,'wheat','Wheat');it(129,'bowl','Bowl');
@@ -481,7 +532,73 @@ const CS=16,H=160,SEA=62;
 const BIOME_PLAINS=0,BIOME_FOREST=1,BIOME_DESERT=2,BIOME_SNOW=3,BIOME_OCEAN=4,BIOME_MOUNTAINS=5;
 const BIOME_NAMES=['Plains','Forest','Desert','Snowy Tundra','Ocean','Mountains'];
 class Chunk{constructor(cx,cz){this.cx=cx;this.cz=cz;this.data=new Uint8Array(CS*CS*H);this.meta=new Uint8Array(CS*CS*H);this.group=null;this.meshes=[null,null,null];this.dirty=true;this.meshed=false;this.top=0;}}
-const world={seed:0,chunks:new Map(),edits:new Map(),noise:null};
+const world={seed:0,chunks:new Map(),edits:new Map(),noise:null,dim:'earth',dimEdits:{},dimFurnaces:{},dimPos:{},dimSpawn:{}};
+// ---- planets (each is its own dimension) ----
+const PLANET_ORDER=['earth','moon','mars','jupiter','saturn','neptune'];
+const EARTH_RS={nZen:[0.0025,0.004,0.012],zen:[0.09,0.24,0.72],nHor:[0.008,0.011,0.022],hor:[0.5,0.68,0.98],sZen:[0.12,0.12,0.3],sHor:[1.05,0.42,0.16],glow:[0.9,0.85,0.7],sGlow:[1.6,0.6,0.15],nAmb:[0.012,0.016,0.032],amb:[0.34,0.44,0.68]};
+const PLANETS={
+  earth:{name:'Earth',g:1,sunSize:1,sunInt:1,atmo:1,stars:0,clouds:1,cloudTint:[1,1,1],cloudStretch:[1,1],haze:0.0028,rs:EARTH_RS,seed:0,
+    desc:'Home. Grass, oceans and blue skies.',
+    bodies:[{t:'mars',phi:2.6,tilt:0.12,deg:0.6,dot:1},{t:'jupiter',phi:3.5,tilt:0.04,deg:0.9,dot:1},{t:'saturn',phi:4.2,tilt:0.15,deg:0.8,dot:1,ring:1}]},
+  moon:{name:'The Moon',lumFloor:0.35,g:0.17,sunSize:1,sunInt:1.15,atmo:0,stars:1,clouds:0,cloudTint:[1,1,1],cloudStretch:[1,1],haze:0,seed:1000,
+    rs:{nZen:[0,0,0],zen:[0,0,0],nHor:[0,0,0],hor:[0.0015,0.0015,0.002],sZen:[0,0,0],sHor:[0.002,0.002,0.002],glow:[0.05,0.05,0.05],sGlow:[0.05,0.05,0.05],nAmb:[0.02,0.024,0.035],amb:[0.035,0.037,0.042]},
+    fast:{day:0x000000,night:0x000000,fog:0x060607,nfog:0x020203,sunset:0x000000},
+    terrain:{base:64,s1:220,a1:10,s2:50,a2:4,ridge:0,craters:0.6,cgrid:40,top:'moon_regolith',fill:'moon_regolith',depth:3,stone:'moon_rock',ores:[['iron_ore',10,8],['diamond_ore',3,6]]},
+    desc:'No air, black sky, Earth hangs overhead. Giant jumps.',
+    bodies:[{t:'earth',phi:2.3,tilt:0.55,deg:11,rim:[0.25,0.5,1.0]}]},
+  mars:{name:'Mars',g:0.38,sunSize:0.7,sunInt:0.85,atmo:0.6,stars:0,clouds:0.35,cloudTint:[1.0,0.85,0.7],cloudStretch:[1,1],haze:0.004,seed:2000,
+    rs:{nZen:[0.002,0.0015,0.001],zen:[0.32,0.2,0.11],nHor:[0.006,0.004,0.003],hor:[0.78,0.52,0.32],sZen:[0.1,0.08,0.1],sHor:[0.25,0.42,0.75],glow:[0.9,0.7,0.5],sGlow:[0.5,0.7,1.2],nAmb:[0.01,0.008,0.008],amb:[0.4,0.3,0.22]},
+    fast:{day:0xc9925f,night:0x0a0605,fog:0xd8a477,nfog:0x0a0605,sunset:0x6f8fc0},
+    terrain:{base:66,s1:300,a1:18,s2:70,a2:6,ridge:40,craters:0.25,cgrid:70,top:'mars_sand',fill:'mars_sand',depth:2,stone:'mars_rock',ores:[['iron_ore',16,8],['diamond_ore',3,6]],deco:'boulders'},
+    desc:'Red dust, craters, blue sunsets. Phobos and Deimos.',
+    bodies:[{t:'phobos',phi:1.8,tilt:0.2,deg:2.6},{t:'deimos',phi:4.0,tilt:-0.1,deg:1.1},{t:'earth',phi:0.6,tilt:0.05,deg:0.45,dot:1}]},
+  jupiter:{name:'Jupiter',g:1.5,sunSize:0.35,sunInt:0.6,atmo:1,stars:0,clouds:1,cloudTint:[1.0,0.82,0.6],cloudStretch:[0.3,2.6],haze:0.006,seed:3000,
+    rs:{nZen:[0.004,0.002,0.001],zen:[0.36,0.21,0.09],nHor:[0.01,0.006,0.003],hor:[0.95,0.62,0.34],sZen:[0.25,0.1,0.05],sHor:[1.1,0.4,0.15],glow:[1.0,0.7,0.4],sGlow:[1.4,0.5,0.15],nAmb:[0.014,0.009,0.006],amb:[0.42,0.3,0.18]},
+    fast:{day:0xc98a4f,night:0x100804,fog:0xdba16a,nfog:0x100804,sunset:0xe0602a},
+    terrain:{base:66,s1:260,a1:14,s2:60,a2:5,ridge:25,craters:0,cgrid:60,top:'jovian_crust',fill:'jovian_crust',depth:3,stone:'jovian_rock',ores:[['iron_ore',14,8],['diamond_ore',4,6]],deco:'crystals'},
+    desc:'Banded orange skies, glowing storm crystals, 4 giant moons.',
+    bodies:[{t:'io',phi:1.2,tilt:0.1,deg:5},{t:'europa',phi:2.2,tilt:0.28,deg:4.2},{t:'ganymede',phi:3.5,tilt:-0.1,deg:6.5},{t:'callisto',phi:4.6,tilt:0.32,deg:5.2}]},
+  saturn:{name:'Saturn',g:1.07,sunSize:0.25,sunInt:0.5,atmo:1,stars:0,clouds:0.6,cloudTint:[1.0,0.95,0.8],cloudStretch:[0.5,1.8],haze:0.005,seed:4000,rings:1,
+    rs:{nZen:[0.003,0.003,0.002],zen:[0.42,0.35,0.2],nHor:[0.008,0.007,0.005],hor:[0.98,0.88,0.62],sZen:[0.25,0.18,0.12],sHor:[1.1,0.6,0.25],glow:[1.0,0.9,0.6],sGlow:[1.3,0.7,0.3],nAmb:[0.012,0.011,0.009],amb:[0.42,0.38,0.28]},
+    fast:{day:0xe0cc95,night:0x0d0b07,fog:0xeedcaa,nfog:0x0d0b07,sunset:0xe0903a},
+    terrain:{base:64,s1:240,a1:12,s2:55,a2:4,ridge:0,craters:0.12,cgrid:60,top:'saturn_dust',fill:'saturn_dust',depth:3,stone:'saturn_rock',ores:[['iron_ore',14,8],['diamond_ore',3,6]],deco:'ice'},
+    desc:'Golden haze and the rings arching across the sky.',
+    bodies:[{t:'titan',phi:2.0,tilt:0.35,deg:5.5},{t:'enceladus',phi:3.8,tilt:0.12,deg:1.3},{t:'rhea',phi:5.0,tilt:0.22,deg:1.8}]},
+  neptune:{name:'Neptune',g:1.14,sunSize:0.15,sunInt:0.4,atmo:1,stars:0,clouds:0.5,cloudTint:[0.85,0.92,1.0],cloudStretch:[0.5,2.0],haze:0.005,seed:5000,
+    rs:{nZen:[0.0005,0.001,0.006],zen:[0.02,0.08,0.38],nHor:[0.002,0.004,0.014],hor:[0.16,0.36,0.92],sZen:[0.03,0.05,0.25],sHor:[0.3,0.4,0.9],glow:[0.6,0.8,1.0],sGlow:[0.7,0.8,1.2],nAmb:[0.006,0.01,0.025],amb:[0.12,0.22,0.5]},
+    fast:{day:0x2f5fd0,night:0x02040c,fog:0x5f8de8,nfog:0x02040c,sunset:0x5070d0},
+    terrain:{base:66,s1:280,a1:16,s2:60,a2:6,ridge:30,craters:0,cgrid:60,top:'neptune_slush',fill:'neptune_ice',depth:4,stone:'neptune_ice',ores:[['iron_ore',12,8],['diamond_ore',10,7]],deco:'diamonds'},
+    desc:'Deep blue ice world where it rains diamonds. Triton above.',
+    bodies:[{t:'triton',phi:2.5,tilt:0.38,deg:6.5}]}
+};
+let PL=PLANETS.earth;
+function planetHeight(x,z){const n=world.noise,T=PL.terrain;
+  let h=T.base+fbm2(n.h1,x/T.s1,z/T.s1,4)*T.a1+fbm2(n.h2,x/T.s2,z/T.s2,3)*T.a2;
+  if(T.ridge){const m=1-Math.abs(fbm2(n.m,x/220,z/220,3));h+=Math.pow(m,4)*T.ridge;}
+  if(T.craters){const G=T.cgrid,gx=Math.floor(x/G),gz=Math.floor(z/G);const sd=world.seed+PL.seed;
+    for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const cx=gx+dx,cz=gz+dz;if(hash3(cx,1,cz,sd)>T.craters)continue;
+      const px=(cx+0.2+0.6*hash3(cx,2,cz,sd))*G,pz=(cz+0.2+0.6*hash3(cx,3,cz,sd))*G,Rr=G*(0.12+0.3*hash3(cx,4,cz,sd));
+      const d=Math.hypot(x-px,z-pz)/Rr;if(d<1)h+=(d*d-1)*Rr*0.32;h+=Math.exp(-Math.pow((d-1)/0.2,2))*Rr*0.12;}}
+  return Math.max(6,Math.min(H-20,Math.floor(h)));}
+function generatePlanetChunk(cx,cz){
+  const c=new Chunk(cx,cz);const d=c.data;const x0=cx*16,z0=cz*16;const n=world.noise;const T=PL.terrain;const seed=world.seed+PL.seed;
+  const top=I[T.top],fill=I[T.fill],stone=I[T.stone];const hs=new Int16Array(256);
+  for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const wx=x0+lx,wz=z0+lz;const h=planetHeight(wx,wz);hs[lx+lz*16]=h;
+    for(let y=0;y<=h;y++){let id;
+      if(y===0||(y<5&&hash3(wx,y,wz,seed)<(5-y)/5))id=I.bedrock;else if(y===h)id=top;else if(y>h-T.depth)id=fill;else id=stone;
+      if(id!==I.bedrock&&y>1&&y<h-1){const s=1/42;const a=n.c1.noise3(wx*s,y*s*1.7,wz*s),bb=n.c2.noise3(wx*s,y*s*1.7,wz*s);if(a*a+bb*bb<0.0105)id=0;else if(y<52&&n.c3.noise3(wx/64,y/28,wz/64)>0.64)id=0;}
+      d[lx+16*(lz+16*y)]=id;}}
+  const r=mulberry32((Math.imul(cx,73856093)^Math.imul(cz,19349663)^seed)>>>0);
+  for(const [k,count,size] of T.ores){const id=I[k];for(let q=0;q<count;q++){let x=r()*16,y=3+r()*50,z=r()*16;for(let i=0;i<size;i++){const ix=x|0,iy=y|0,iz=z|0;if(ix>=0&&ix<16&&iz>=0&&iz<16&&iy>0&&iy<H){const idx=ix+16*(iz+16*iy);if(d[idx]===stone)d[idx]=id;}x+=r()*2-1;y+=r()*2-1;z+=r()*2-1;}}}
+  for(let lz=1;lz<15;lz++)for(let lx=1;lx<15;lx++){const h=hs[lx+lz*16];if(h+4>=H)continue;const idx=lx+16*(lz+16*h);if(d[idx]!==top)continue;const pr=hash3(x0+lx,5,z0+lz,seed);
+    if(T.deco==='boulders'&&pr<0.006){d[idx+256]=I.mars_rock;if(pr<0.003){d[idx+257]=I.mars_rock;d[idx+512]=I.mars_rock;}}
+    else if(T.deco==='crystals'&&pr<0.008){const ht=1+(pr*400|0)%3;for(let k=1;k<=ht;k++)d[idx+256*k]=I.storm_crystal;}
+    else if(T.deco==='ice'&&pr<0.007){d[idx+256]=I.ring_ice;if(pr<0.0035){d[idx+257]=I.ring_ice;d[idx+256+16]=I.ring_ice;d[idx+512]=I.ring_ice;}}
+    else if(T.deco==='diamonds'){if(pr<0.004)d[idx]=I.diamond_ore;else if(pr<0.012){const ht=2+(pr*900|0)%4;for(let k=1;k<=ht;k++)d[idx+256*k]=I.neptune_ice;}}}
+  const ed=world.edits.get(ckey(cx,cz));if(ed)for(const [idx,v] of ed){d[idx]=v&255;c.meta[idx]=v>>8;}
+  let tp=0;for(let y=H-1;y>=0&&!tp;y--){const o=y*256;for(let i=0;i<256;i++)if(d[o+i]){tp=y;break;}}c.top=tp;
+  world.chunks.set(ckey(cx,cz),c);return c;}
+
 function ckey(cx,cz){return cx+','+cz;}
 let lastChunk=null;
 function getChunk(cx,cz){if(lastChunk&&lastChunk.cx===cx&&lastChunk.cz===cz)return lastChunk;const c=world.chunks.get(ckey(cx,cz));if(c)lastChunk=c;return c;}
@@ -491,14 +608,15 @@ function getMeta(x,y,z){if(y<0||y>=H)return 0;const c=getChunk(x>>4,z>>4);if(!c)
 function initNoise(seed){
   world.noise={h1:new Simplex(seed+1),h2:new Simplex(seed+2),m:new Simplex(seed+3),t:new Simplex(seed+4),hum:new Simplex(seed+5),c1:new Simplex(seed+6),c2:new Simplex(seed+7),c3:new Simplex(seed+8),g:new Simplex(seed+9)};
 }
-function heightAt(x,z){const n=world.noise;
+function heightAt(x,z){return world.dim==='earth'?earthHeight(x,z):planetHeight(x,z);}
+function earthHeight(x,z){const n=world.noise;
   const c=fbm2(n.h1,x/340,z/340,4);
   const d=fbm2(n.h2,x/90,z/90,3);
   let h=64+c*24+d*7;
   const m=fbm2(n.m,x/260,z/260,2);
   if(m>0.18){const t=(m-0.18)/0.82;h+=t*t*95;}
   return Math.max(3,Math.min(H-14,Math.floor(h)));}
-function biomeAt(x,z,h){const n=world.noise;
+function biomeAt(x,z,h){const n=world.noise;if(world.dim!=='earth')return BIOME_PLAINS;
   if(h===undefined)h=heightAt(x,z);
   if(h<SEA-3)return BIOME_OCEAN;
   const t=fbm2(n.t,x/600,z/600,2)+n.t.noise2(x/40,z/40)*0.02;const m=fbm2(n.hum,x/450,z/450,2);
@@ -509,6 +627,7 @@ function biomeAt(x,z,h){const n=world.noise;
   return BIOME_PLAINS;}
 
 function generateChunk(cx,cz){
+  if(world.dim!=='earth')return generatePlanetChunk(cx,cz);
   const c=new Chunk(cx,cz);const d=c.data;const x0=cx*16,z0=cz*16;const n=world.noise;const seed=world.seed;
   const hs=new Int16Array(256),bs=new Uint8Array(256);
   for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){
@@ -690,7 +809,7 @@ renderer.setSize(innerWidth,innerHeight);renderer.domElement.id='game';
 renderer.autoClear=false;
 document.body.prepend(renderer.domElement);
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.05,1200);camera.rotation.order='YXZ';
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.05,4000);camera.rotation.order='YXZ';
 const handScene=new THREE.Scene();const handCam=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.01,10);
 handScene.add(new THREE.AmbientLight(0xffffff,0.62));const hdl=new THREE.DirectionalLight(0xffffff,0.5);hdl.position.set(-0.4,1,0.6);handScene.add(hdl);
 let atlasTex;
@@ -728,7 +847,7 @@ const RU={map:{value:null},shadowMap:{value:null},shadowMatrix:{value:new THREE.
   lightDir:{value:new THREE.Vector3(0,1,0)},lightCol:{value:new THREE.Vector3(1,1,1)},sunDir:{value:new THREE.Vector3(0,1,0)},skyAmb:{value:new THREE.Vector3()},
   zenithCol:{value:new THREE.Vector3()},horizonCol:{value:new THREE.Vector3()},glowCol:{value:new THREE.Vector3()},sunCol:{value:new THREE.Vector3()},night:{value:0},
   time:{value:0},fogNear:U.fogNear,fogFar:U.fogFar,underwater:{value:0},clipY:{value:-1e9},
-  reflTex:{value:null},refrTex:{value:null},reflVP:{value:new THREE.Matrix4()},resolution:{value:new THREE.Vector2(1,1)},waterH:{value:SEA+0.875},reflOn:{value:0}};
+  reflTex:{value:null},refrTex:{value:null},reflVP:{value:new THREE.Matrix4()},resolution:{value:new THREE.Vector2(1,1)},waterH:{value:SEA+0.875},reflOn:{value:0},haze:{value:0.0028},cloudCov:{value:1},cloudTint:{value:new THREE.Vector3(1,1,1)},cloudStretch:{value:new THREE.Vector2(1,1)},sunC1:{value:0.99935},sunC2:{value:0.99965},moonOn:{value:1},starAlways:{value:0}};
 const GL_WAVE=`uniform float time;
 vec3 wave(vec3 w,float k){
   if(k>0.5&&k<2.5){float a=k>1.5?0.10:0.035;
@@ -744,7 +863,7 @@ ${GL_WAVE}
 void main(){vUv=uv;vL=light;vec4 w=modelMatrix*vec4(position,1.0);w.xyz=wave(w.xyz,light.w);vW=w.xyz;vec4 mv=viewMatrix*w;vV=mv.xyz;gl_Position=projectionMatrix*mv;}`;
 const FS_R=`uniform sampler2D map;uniform sampler2D shadowMap;uniform mat4 shadowMatrix;uniform float shadowTexel;uniform float shadowOn;
 uniform vec3 lightDir;uniform vec3 lightCol;uniform vec3 skyAmb;uniform float time;uniform float fogNear;uniform float fogFar;uniform float underwater;
-uniform float clipY;uniform float alphaTest;uniform sampler2D reflTex;uniform sampler2D refrTex;uniform mat4 reflVP;uniform vec2 resolution;uniform float waterH;uniform float reflOn;
+uniform float clipY;uniform float alphaTest;uniform float haze;uniform sampler2D reflTex;uniform sampler2D refrTex;uniform mat4 reflVP;uniform vec2 resolution;uniform float waterH;uniform float reflOn;
 varying vec2 vUv;varying vec4 vL;varying vec3 vW;varying vec3 vV;
 ${GL_SKY}
 float shadowF(vec3 wp,vec3 n,float fb){
@@ -806,25 +925,25 @@ void main(){
   }
   vec3 vd=normalize(-toCam);vec3 fc;float f;
   if(underwater>0.5){fc=vec3(0.01,0.05,0.09)*(dot(skyAmb,vec3(0.33))+0.02)*2.0;f=1.0-exp(-dist*0.11);}
-  else{fc=skyCol(vd);float haze=(1.0-exp(-dist*0.0028))*sky;f=max(smoothstep(fogNear,fogFar,dist),haze*0.55);}
+  else{fc=skyCol(vd);float hz=(1.0-exp(-dist*haze))*sky;f=max(smoothstep(fogNear,fogFar,dist),hz*0.55);}
   gl_FragColor=vec4(mix(col,fc,f),alpha);}`;
 const VS_SHADOW=`attribute vec4 light;varying vec2 vUv;
 ${GL_WAVE}
 void main(){vUv=uv;vec4 w=modelMatrix*vec4(position,1.0);w.xyz=wave(w.xyz,light.w);gl_Position=projectionMatrix*viewMatrix*w;}`;
-const FS_SKYDOME=`uniform vec3 sunCol;uniform float night;uniform float time;varying vec3 vDir;
+const FS_SKYDOME=`uniform vec3 sunCol;uniform float night;uniform float time;uniform float cloudCov;uniform vec3 cloudTint;uniform vec2 cloudStretch;uniform float sunC1;uniform float sunC2;uniform float moonOn;uniform float starAlways;varying vec3 vDir;
 ${GL_SKY}
 float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(h21(i),h21(i+vec2(1.0,0.0)),f.x),mix(h21(i+vec2(0.0,1.0)),h21(i+vec2(1.0,1.0)),f.x),f.y);}
 float fbm(vec2 p){float s=0.0,a=0.5;for(int i=0;i<6;i++){s+=a*vn(p);p=p*2.03+vec2(17.1,9.3);a*=0.5;}return s;}
 void main(){vec3 d=normalize(vDir);vec3 c=skyCol(d);
-  float sd=dot(d,sunDir);c+=sunCol*smoothstep(0.99935,0.99965,sd)*60.0*step(0.0,d.y+0.02);
-  float md=dot(d,-sunDir);c+=vec3(0.75,0.8,0.95)*smoothstep(0.9993,0.9996,md)*night*0.9;
+  float sd=dot(d,sunDir);c+=sunCol*smoothstep(sunC1,sunC2,sd)*60.0*step(0.0,d.y+0.02);
+  float md=dot(d,-sunDir);c+=vec3(0.75,0.8,0.95)*smoothstep(0.9993,0.9996,md)*night*0.9*moonOn;
   if(d.y>0.0){vec3 sp=floor(d*320.0);float h=fract(sin(dot(sp,vec3(12.9898,78.233,45.164)))*43758.5453);
-    if(h>0.9972)c+=vec3(0.9,0.95,1.0)*(h-0.9972)*350.0*night*(0.6+0.4*sin(time*2.5+h*300.0))*smoothstep(0.0,0.2,d.y);}
-  if(d.y>0.0){vec2 uv=d.xz/(d.y+0.07)*1.3+vec2(time*0.010,time*0.004);float den=fbm(uv*1.1);float cov=smoothstep(0.47,0.8,den);
+    if(h>0.9972)c+=vec3(0.9,0.95,1.0)*(h-0.9972)*350.0*max(night,starAlways)*(0.6+0.4*sin(time*2.5+h*300.0))*smoothstep(0.0,0.2,d.y);}
+  if(d.y>0.0&&cloudCov>0.0){vec2 uv=(d.xz/(d.y+0.07)*1.3)*cloudStretch+vec2(time*0.010,time*0.004);float den=fbm(uv*1.1);float cov=smoothstep(0.8-0.33*cloudCov,0.8,den);
     if(cov>0.001){float den2=fbm((uv+sunDir.xz*0.08)*1.1);float lit=clamp(0.55+(den-den2)*7.0,0.0,1.0);
       vec3 dark=zenithCol*0.55+horizonCol*0.35;vec3 bright=sunCol*0.38+horizonCol*0.45+zenithCol*0.2;
-      vec3 cc=mix(dark,bright,lit)+glowCol*pow(max(sd,0.0),8.0)*0.7*(1.0-cov*0.5);
+      vec3 cc=mix(dark,bright,lit)*cloudTint+glowCol*pow(max(sd,0.0),8.0)*0.7*(1.0-cov*0.5);
       c=mix(c,cc,cov*0.95*smoothstep(0.0,0.12,d.y));}}
   gl_FragColor=vec4(c,1.0);}`;
 let realOpaque,realCutout,realTrans,shadowMat,skyDome,reflCam,shadowCam;
@@ -833,7 +952,7 @@ function initRealMats(){
   const mk=(at,o)=>new THREE.ShaderMaterial(Object.assign({uniforms:Object.assign({},RU,{alphaTest:{value:at}}),vertexShader:VS_R,fragmentShader:FS_R,extensions:{derivatives:true}},o));
   realOpaque=mk(0.5,{});realCutout=mk(0.5,{side:THREE.DoubleSide});realTrans=mk(0.01,{transparent:true,depthWrite:false,side:THREE.DoubleSide});
   shadowMat=new THREE.ShaderMaterial({uniforms:{map:RU.map,time:RU.time},vertexShader:VS_SHADOW,fragmentShader:'uniform sampler2D map;varying vec2 vUv;void main(){if(texture2D(map,vUv).a<0.5)discard;gl_FragColor=vec4(1.0);}',side:THREE.DoubleSide});
-  skyDome=new THREE.Mesh(new THREE.SphereGeometry(900,48,24),new THREE.ShaderMaterial({uniforms:{sunDir:RU.sunDir,zenithCol:RU.zenithCol,horizonCol:RU.horizonCol,glowCol:RU.glowCol,sunCol:RU.sunCol,night:RU.night,time:RU.time},
+  skyDome=new THREE.Mesh(new THREE.SphereGeometry(900,48,24),new THREE.ShaderMaterial({uniforms:{cloudCov:RU.cloudCov,cloudTint:RU.cloudTint,cloudStretch:RU.cloudStretch,sunC1:RU.sunC1,sunC2:RU.sunC2,moonOn:RU.moonOn,starAlways:RU.starAlways,sunDir:RU.sunDir,zenithCol:RU.zenithCol,horizonCol:RU.horizonCol,glowCol:RU.glowCol,sunCol:RU.sunCol,night:RU.night,time:RU.time},
     vertexShader:'varying vec3 vDir;void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:FS_SKYDOME,side:THREE.BackSide,depthWrite:false}));
   skyDome.frustumCulled=false;skyDome.renderOrder=-100;skyDome.layers.enable(2);skyDome.visible=false;scene.add(skyDome);
   reflCam=new THREE.PerspectiveCamera();reflCam.rotation.order='YXZ';reflCam.layers.set(1);reflCam.layers.enable(2);
@@ -863,23 +982,23 @@ function setupRealTargets(){
     void main(){float z=texture2D(tDepth,vUv).r*2.0-1.0;float lin=2.0*cn*cf/(cf+cn-z*(cf-cn));gl_FragColor=vec4(texture2D(tColor,vUv).rgb,lin);}`,{tColor:{value:null},tDepth:{value:null},cn:{value:0.05},cf:{value:1200}});
   PM.lum=postMat(`uniform sampler2D tColor;varying vec2 vUv;void main(){float s=0.0;for(int i=0;i<8;i++)for(int j=0;j<8;j++){vec2 uv=0.12+(vec2(float(i),float(j))+0.5)/8.0*0.76;vec3 c=texture2D(tColor,uv).rgb;s+=log(dot(c,vec3(0.2126,0.7152,0.0722))+0.0001);}gl_FragColor=vec4(vec3(exp(s/64.0)),1.0);}`,{tColor:{value:null}});
   PM.adapt=postMat(`uniform sampler2D tPrev;uniform sampler2D tCur;uniform float rate;varying vec2 vUv;void main(){float p=texture2D(tPrev,vec2(0.5)).r;float c=texture2D(tCur,vec2(0.5)).r;gl_FragColor=vec4(vec3(p+(c-p)*rate),1.0);}`,{tPrev:{value:null},tCur:{value:null},rate:{value:1}});
-  PM.bright=postMat(`uniform sampler2D tColor;uniform sampler2D tAdapt;uniform float key;varying vec2 vUv;void main(){float L=texture2D(tAdapt,vec2(0.5)).r;float e=clamp(key/max(L,1e-4),0.15,10.0);vec3 c=texture2D(tColor,vUv).rgb*e;gl_FragColor=vec4(max(c-vec3(1.0),0.0),1.0);}`,{tColor:{value:null},tAdapt:{value:null},key:{value:0.22}});
+  PM.bright=postMat(`uniform sampler2D tColor;uniform sampler2D tAdapt;uniform float key;uniform float lumFloor;varying vec2 vUv;void main(){float L=texture2D(tAdapt,vec2(0.5)).r;float e=clamp(key/max(L,lumFloor),0.15,10.0);vec3 c=texture2D(tColor,vUv).rgb*e;gl_FragColor=vec4(max(c-vec3(1.0),0.0),1.0);}`,{tColor:{value:null},tAdapt:{value:null},key:{value:0.22},lumFloor:{value:1e-4}});
   PM.blur=postMat(`uniform sampler2D tIn;uniform vec2 dir;varying vec2 vUv;void main(){vec3 c=texture2D(tIn,vUv).rgb*0.2270270270;
     c+=texture2D(tIn,vUv+dir*1.3846153846).rgb*0.3162162162;c+=texture2D(tIn,vUv-dir*1.3846153846).rgb*0.3162162162;
     c+=texture2D(tIn,vUv+dir*3.2307692308).rgb*0.0702702703;c+=texture2D(tIn,vUv-dir*3.2307692308).rgb*0.0702702703;gl_FragColor=vec4(c,1.0);}`,{tIn:{value:null},dir:{value:new THREE.Vector2()}});
   PM.rays=postMat(`uniform sampler2D tDepth;uniform vec2 sunPos;uniform float far;varying vec2 vUv;void main(){vec2 delta=(vUv-sunPos)/56.0*0.95;vec2 uv=vUv;float illum=0.0,decay=1.0;
     uv-=delta*fract(sin(dot(vUv,vec2(12.9898,78.233)))*43758.5453);for(int i=0;i<56;i++){uv-=delta;illum+=step(far*0.9,texture2D(tDepth,clamp(uv,0.0,1.0)).a)*decay;decay*=0.968;}gl_FragColor=vec4(vec3(illum/56.0),1.0);}`,{tDepth:{value:null},sunPos:{value:new THREE.Vector2()},far:{value:1200}});
   PM.comp=postMat(`uniform sampler2D tScene;uniform sampler2D tB0;uniform sampler2D tB1;uniform sampler2D tB2;uniform sampler2D tB3;uniform sampler2D tRays;uniform sampler2D tAdapt;
-    uniform float key;uniform float raysAmt;uniform float bloomAmt;uniform float underwater;uniform vec3 raysCol;uniform vec2 sunPos;uniform float aspect;varying vec2 vUv;
+    uniform float key;uniform float lumFloor;uniform float raysAmt;uniform float bloomAmt;uniform float underwater;uniform vec3 raysCol;uniform vec2 sunPos;uniform float aspect;varying vec2 vUv;
     vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}
     void main(){vec2 uv=vUv;if(underwater>0.5)uv+=vec2(sin(uv.y*40.0+raysCol.r*0.0),cos(uv.x*35.0))*0.0;
-      vec3 c=texture2D(tScene,uv).rgb;float L=texture2D(tAdapt,vec2(0.5)).r;float e=clamp(key/max(L,1e-4),0.15,10.0);c*=e;
+      vec3 c=texture2D(tScene,uv).rgb;float L=texture2D(tAdapt,vec2(0.5)).r;float e=clamp(key/max(L,lumFloor),0.15,10.0);c*=e;
       vec3 b=texture2D(tB0,uv).rgb*0.35+texture2D(tB1,uv).rgb*0.55+texture2D(tB2,uv).rgb*0.8+texture2D(tB3,uv).rgb*1.1;c+=b*bloomAmt;
       vec2 dd=(uv-sunPos)*vec2(aspect,1.0);c+=texture2D(tRays,uv).r*raysCol*raysAmt*exp(-dot(dd,dd)*1.6)*e;
       if(underwater>0.5)c*=vec3(0.6,0.9,1.15);
       c=aces(c);float l=dot(c,vec3(0.2126,0.7152,0.0722));c=mix(vec3(l),c,1.04);
       vec2 v=vUv-0.5;c*=1.0-dot(v,v)*0.5;c=pow(max(c,0.0),vec3(1.0/2.2));
-      gl_FragColor=vec4(c,1.0);}`,{tScene:{value:null},tB0:{value:null},tB1:{value:null},tB2:{value:null},tB3:{value:null},tRays:{value:null},tAdapt:{value:null},key:{value:0.22},raysAmt:{value:0},bloomAmt:{value:0.12},underwater:{value:0},raysCol:{value:new THREE.Vector3()},sunPos:{value:new THREE.Vector2()},aspect:{value:1}});
+      gl_FragColor=vec4(c,1.0);}`,{tScene:{value:null},tB0:{value:null},tB1:{value:null},tB2:{value:null},tB3:{value:null},tRays:{value:null},tAdapt:{value:null},key:{value:0.22},lumFloor:{value:1e-4},raysAmt:{value:0},bloomAmt:{value:0.12},underwater:{value:0},raysCol:{value:new THREE.Vector3()},sunPos:{value:new THREE.Vector2()},aspect:{value:1}});
   PM.fxaa=postMat(`uniform sampler2D tIn;uniform vec2 px;varying vec2 vUv;void main(){vec3 L=vec3(0.299,0.587,0.114);
     vec3 nw=texture2D(tIn,vUv+vec2(-1.0,-1.0)*px).rgb,ne=texture2D(tIn,vUv+vec2(1.0,-1.0)*px).rgb,sw=texture2D(tIn,vUv+vec2(-1.0,1.0)*px).rgb,se=texture2D(tIn,vUv+vec2(1.0,1.0)*px).rgb,m=texture2D(tIn,vUv).rgb;
     float lnw=dot(nw,L),lne=dot(ne,L),lsw=dot(sw,L),lse=dot(se,L),lm=dot(m,L);float lmin=min(lm,min(min(lnw,lne),min(lsw,lse))),lmax=max(lm,max(max(lnw,lne),max(lsw,lse)));
@@ -904,15 +1023,17 @@ function updateRealSky(ang,dt){
   const sd=RU.sunDir.value.set(Math.cos(ang),Math.sin(ang),0.32).normalize();const elev=sd.y;
   const day=THREE.MathUtils.smoothstep(elev,-0.12,0.2),sunset=Math.exp(-Math.pow(elev/0.17,2)),night=1-THREE.MathUtils.smoothstep(elev,-0.2,0.02);
   const L=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
-  let zen=L([0.0025,0.004,0.012],[0.09,0.24,0.72],day),hor=L([0.008,0.011,0.022],[0.5,0.68,0.98],day);
-  zen=L(zen,[0.12,0.12,0.3],sunset*0.5);hor=L(hor,[1.05,0.42,0.16],sunset*0.75);
+  const rs=PL.rs;let zen=L(rs.nZen,rs.zen,day),hor=L(rs.nHor,rs.hor,day);
+  zen=L(zen,rs.sZen,sunset*0.5);hor=L(hor,rs.sHor,sunset*0.75);
   RU.zenithCol.value.set(...zen);RU.horizonCol.value.set(...hor);
-  RU.glowCol.value.set(...L([0.9,0.85,0.7],[1.6,0.6,0.15],sunset)).multiplyScalar(THREE.MathUtils.smoothstep(elev,-0.15,0.05));
-  const sc=L([1.0,0.42,0.16],[1.0,0.94,0.86],THREE.MathUtils.smoothstep(elev,0.0,0.35));const si=3.0*THREE.MathUtils.smoothstep(elev,-0.03,0.08);
+  RU.glowCol.value.set(...L(rs.glow,rs.sGlow,sunset)).multiplyScalar(THREE.MathUtils.smoothstep(elev,-0.15,0.05));
+  const sc=L([1.0,0.42,0.16],[1.0,0.94,0.86],THREE.MathUtils.smoothstep(elev,0.0,0.35));const si=3.0*PL.sunInt*THREE.MathUtils.smoothstep(elev,-0.03,0.08);
   RU.sunCol.value.set(sc[0]*si,sc[1]*si,sc[2]*si);
   if(elev>0){RU.lightDir.value.copy(sd);RU.lightCol.value.copy(RU.sunCol.value);}
   else{RU.lightDir.value.copy(sd).negate();const mi=0.22*THREE.MathUtils.smoothstep(-elev,-0.03,0.08);RU.lightCol.value.set(0.3*mi,0.4*mi,0.7*mi);}
-  RU.skyAmb.value.set(...L([0.012,0.016,0.032],[0.34,0.44,0.68],day)).add(_v1.set(0.22,0.12,0.08).multiplyScalar(sunset*day));
+  RU.skyAmb.value.set(...L(rs.nAmb,rs.amb,day)).add(_v1.set(0.22,0.12,0.08).multiplyScalar(sunset*day*PL.atmo));
+  const sr=0.0316*PL.sunSize;RU.sunC1.value=Math.cos(sr*1.15);RU.sunC2.value=Math.cos(sr*0.85);RU.cloudCov.value=PL.clouds*(opts.clouds?1:0);RU.cloudTint.value.set(...PL.cloudTint);RU.cloudStretch.value.set(...PL.cloudStretch);
+  RU.moonOn.value=world.dim==='earth'?1:0;RU.starAlways.value=PL.stars;RU.haze.value=PL.haze;
   const la=RU.lightCol.value,sa=RU.skyAmb.value;RX.entB=(sa.x+sa.y+sa.z)/3+(la.x+la.y+la.z)/3*0.45;
   RU.night.value=night;RU.underwater.value=player.headInWater?1:0;
   skyDome.position.copy(camera.position);scene.background=null;
@@ -932,7 +1053,7 @@ function renderRealistic(dt){
   renderer.setRenderTarget(RT.shadow);renderer.clear(true,true,false);scene.overrideMaterial=shadowMat;renderer.render(scene,shadowCam);scene.overrideMaterial=null;
   // 2) planar water reflection
   const wh=RU.waterH.value;camera.updateMatrixWorld();
-  if(camera.position.y>wh+0.05&&!player.headInWater){
+  if(world.dim==='earth'&&camera.position.y>wh+0.05&&!player.headInWater){
     reflCam.fov=camera.fov;reflCam.aspect=camera.aspect;reflCam.near=camera.near;reflCam.far=camera.far;reflCam.updateProjectionMatrix();
     reflCam.position.set(camera.position.x,2*wh-camera.position.y,camera.position.z);reflCam.rotation.set(-camera.rotation.x,camera.rotation.y,-camera.rotation.z);reflCam.updateMatrixWorld();
     RU.reflVP.value.multiplyMatrices(reflCam.projectionMatrix,reflCam.matrixWorldInverse);
@@ -961,6 +1082,7 @@ function renderRealistic(dt){
   if(ra>0){PM.rays.uniforms.tDepth.value=RT.refr.texture;PM.rays.uniforms.sunPos.value.set(sp.x*0.5+0.5,sp.y*0.5+0.5);PM.rays.uniforms.far.value=camera.far;pass(PM.rays,RT.rays);}
   else{renderer.setRenderTarget(RT.rays);renderer.setClearColor(0x000000,1);renderer.clear();}
   // 9) composite + tone map, then FXAA to screen
+  const lf=Math.max(1e-4,(PL.lumFloor||0)*THREE.MathUtils.smoothstep(RU.sunDir.value.y,-0.05,0.15));PM.comp.uniforms.lumFloor.value=lf;PM.bright.uniforms.lumFloor.value=lf;
   const cu=PM.comp.uniforms;cu.tScene.value=RT.main.texture;for(let l=0;l<4;l++)cu['tB'+l].value=RT['ba'+l].texture;cu.tRays.value=RT.rays.texture;cu.tAdapt.value=RT.adA.texture;
   cu.raysAmt.value=ra;cu.raysCol.value.copy(RU.lightCol.value);cu.sunPos.value.set(sp.x*0.5+0.5,sp.y*0.5+0.5);cu.aspect.value=RX.w/RX.h;cu.underwater.value=player.headInWater?1:0;
   pass(PM.comp,RT.ldr);
@@ -986,6 +1108,98 @@ function blockGeo(id){
 
 // ---- sky ----
 let sunMesh,moonMesh,stars,clouds,cloudMat;
+// ---- celestial bodies: procedural planet textures, lit by the sun ----
+function bodyCanvas(type){const W=256,Hh=128;const c=document.createElement('canvas');c.width=W;c.height=Hh;const g=c.getContext('2d');const img=g.createImageData(W,Hh);const d=img.data;const n=new Simplex(strHash(type));
+  const f3=(p,s,o)=>{let a=1,t=0,nn=0,f=s;for(let i=0;i<o;i++){t+=a*n.noise3(p[0]*f,p[1]*f,p[2]*f);nn+=a;a*=0.5;f*=2;}return t/nn;};
+  const M=(a,b,t)=>mix(a,b,Math.max(0,Math.min(1,t)));
+  for(let y=0;y<Hh;y++)for(let x=0;x<W;x++){const lon=x/W*Math.PI*2,lat=(y/Hh-0.5)*Math.PI;const p=[Math.cos(lat)*Math.cos(lon),Math.sin(lat),Math.cos(lat)*Math.sin(lon)];const la=lat/(Math.PI/2);let col;
+    if(type==='earth'){const v=f3(p,1.5,5);if(v>0.06){col=M([70,128,52],[150,128,78],f3(p,4,3)*2+0.4);if(Math.abs(la)>0.55)col=M(col,[120,140,90],0.4);}else col=M([16,40,110],[34,86,170],(v+0.4)*2);
+      if(Math.abs(la)>0.84)col=[236,242,250];const cl=f3([p[0]+3,p[1],p[2]],2.6,4);if(cl>0.08)col=M(col,[248,250,255],(cl-0.08)*4);}
+    else if(type==='moon'||type==='phobos'||type==='deimos'||type==='rhea'||type==='callisto'){const base=type==='callisto'?[88,78,66]:type==='rhea'?[190,186,180]:type==='moon'?[156,154,150]:[112,102,92];
+      col=shade(base,0.85+f3(p,3,4)*0.35);if(type==='moon'&&f3(p,1.3,3)>0.12)col=shade(col,0.66);const cr=f3(p,9,2);if(cr>0.42)col=shade(col,0.75);else if(cr>0.36)col=shade(col,1.2);if(type==='callisto'&&f3(p,14,1)>0.55)col=[220,214,200];}
+    else if(type==='mars'){col=M([196,96,52],[130,62,38],f3(p,2,4)*2+0.3);if(Math.abs(la)>0.86)col=[236,232,228];}
+    else if(type==='jupiter'){const b=Math.sin(la*19+f3(p,3,3)*1.6);const t=f3(p,6,2);col=b>0.3?M([226,206,176],[236,226,206],t+0.5):b>-0.3?M([196,138,92],[214,170,122],t+0.5):M([150,98,70],[176,120,84],t+0.5);
+      const sx=((lon-1.2)/0.32),sy=((la+0.24)/0.11);const sdd=sx*sx+sy*sy;if(sdd<1)col=M([206,92,60],[226,140,100],sdd+f3(p,12,2));}
+    else if(type==='saturn'){const b=Math.sin(la*14+f3(p,2,2)*0.6);col=M([200,170,118],[234,214,164],b*0.5+0.5);}
+    else if(type==='neptune'){const b=Math.sin(la*8+f3(p,3,3));col=M([40,76,196],[70,120,230],b*0.5+0.5);if(f3(p,6,3)>0.35)col=M(col,[200,220,255],0.5);const sx=((lon-2.4)/0.3),sy=((la+0.3)/0.12);if(sx*sx+sy*sy<1)col=[24,40,120];}
+    else if(type==='io'){col=M([230,206,90],[214,170,70],f3(p,3,3)+0.5);const s=f3(p,7,2);if(s>0.4)col=[60,40,20];else if(s>0.28)col=[226,120,50];}
+    else if(type==='europa'){col=M([222,212,192],[200,186,160],f3(p,3,3)+0.5);if(Math.abs(n.noise3(p[0]*5,p[1]*5,p[2]*5))<0.035)col=[150,94,60];}
+    else if(type==='ganymede'){col=M([146,130,114],[92,82,72],f3(p,2.5,4)*2+0.5);if(f3(p,10,2)>0.4)col=[200,194,184];}
+    else if(type==='titan'){col=M([212,150,62],[190,130,52],Math.sin(la*6)*0.5+0.5+f3(p,3,2)*0.3);}
+    else if(type==='enceladus'){col=M([240,246,252],[214,226,240],f3(p,4,3)+0.5);}
+    else if(type==='triton'){col=M([224,204,194],[180,160,156],f3(p,3,4)*1.5+0.5);if(Math.abs(la)>0.6)col=M(col,[240,220,220],0.5);}
+    else col=[200,200,200];
+    const i=(y*W+x)*4;d[i]=col[0];d[i+1]=col[1];d[i+2]=col[2];d[i+3]=255;}
+  g.putImageData(img,0,0);return c;}
+const bodyTexCache={};
+function bodyTex(t){if(!bodyTexCache[t]){const tx=new THREE.CanvasTexture(bodyCanvas(t));tx.wrapS=THREE.RepeatWrapping;bodyTexCache[t]=tx;}return bodyTexCache[t];}
+const BODY_VS='varying vec2 vUv;varying vec3 vN;varying vec3 vWp;void main(){vUv=uv;vN=normalize(mat3(modelMatrix)*normal);vec4 w=modelMatrix*vec4(position,1.0);vWp=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}';
+const BODY_FS=`uniform sampler2D map;uniform vec3 sunDir;uniform float lin;uniform float fade;uniform float spin;uniform float inten;uniform vec3 rim;varying vec2 vUv;varying vec3 vN;varying vec3 vWp;
+void main(){vec3 n=normalize(vN);vec3 t=texture2D(map,vec2(vUv.x+spin,vUv.y)).rgb;float ndl=dot(n,sunDir);float l=smoothstep(-0.06,0.3,ndl);
+  vec3 V=normalize(cameraPosition-vWp);float fr=pow(1.0-max(dot(n,V),0.0),3.0);vec3 c=t*(l+0.012)+rim*fr*smoothstep(-0.25,0.3,ndl)*1.4;
+  if(lin>0.5)c=pow(max(c,0.0),vec3(2.2))*inten;gl_FragColor=vec4(c,1.0-fade);}`;
+const RING_VS='uniform float rIn;uniform float rOut;varying float vR;void main(){vR=(length(position.xy)-rIn)/(rOut-rIn);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
+const RING_FS=`uniform vec3 sunDir;uniform vec3 ringN;uniform float lin;uniform float inten;uniform float fade;varying float vR;
+float hh(float x){return fract(sin(x*127.1)*43758.5453);}
+void main(){float r=vR;if(r<0.0||r>1.0)discard;float b=floor(r*150.0);float dens=0.45+0.35*hh(b)+0.2*sin(r*60.0);
+  dens*=smoothstep(0.0,0.05,r)*smoothstep(1.0,0.92,r);if(r>0.62&&r<0.665)dens*=0.06;if(r<0.2)dens*=0.35;
+  vec3 col=mix(vec3(0.86,0.77,0.6),vec3(0.62,0.54,0.42),hh(b*3.1));vec3 c=col*(0.25+0.75*abs(dot(ringN,sunDir)));
+  if(lin>0.5)c=pow(c,vec3(2.2))*inten;gl_FragColor=vec4(c,clamp(dens,0.0,1.0)*0.92*(1.0-fade));}`;
+let skyBodies=[],skyRing=null,bodyGeo=null;
+function ringMat(rIn,rOut){return new THREE.ShaderMaterial({uniforms:{rIn:{value:rIn},rOut:{value:rOut},sunDir:{value:new THREE.Vector3()},ringN:{value:new THREE.Vector3(0,1,0)},lin:{value:0},inten:{value:1},fade:{value:0}},vertexShader:RING_VS,fragmentShader:RING_FS,transparent:true,depthWrite:false,side:THREE.DoubleSide});}
+function buildSkyBodies(){
+  if(!bodyGeo)bodyGeo=new THREE.SphereGeometry(1,64,32);
+  for(const o of skyBodies){scene.remove(o.mesh);o.mesh.material.dispose();}skyBodies=[];
+  if(skyRing){scene.remove(skyRing);skyRing.material.dispose();skyRing.geometry.dispose();skyRing=null;}
+  for(const b of PL.bodies){const mat=new THREE.ShaderMaterial({uniforms:{map:{value:bodyTex(b.t)},sunDir:{value:new THREE.Vector3()},lin:{value:0},fade:{value:0},spin:{value:0},inten:{value:1},rim:{value:new THREE.Vector3(...(b.rim||[0,0,0]))}},vertexShader:BODY_VS,fragmentShader:BODY_FS,transparent:true,depthWrite:false});
+    const m=new THREE.Mesh(bodyGeo,mat);m.renderOrder=-90;m.frustumCulled=false;m.layers.enable(2);scene.add(m);let ring=null;
+    if(b.ring){ring=new THREE.Mesh(new THREE.RingGeometry(1.25,2.3,96,1),ringMat(1.25,2.3));ring.rotation.x=1.15;ring.renderOrder=-89;ring.frustumCulled=false;ring.layers.enable(2);m.add(ring);}
+    skyBodies.push({b,mesh:m,ring});}
+  if(PL.rings){skyRing=new THREE.Mesh(new THREE.RingGeometry(1150,2100,384,1),ringMat(1150,2100));const lat=20*Math.PI/180;const nrm=new THREE.Vector3(0,Math.sin(lat),-Math.cos(lat));
+    skyRing.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),nrm);skyRing.material.uniforms.ringN.value.copy(nrm);skyRing.renderOrder=-95;skyRing.frustumCulled=false;skyRing.layers.enable(2);scene.add(skyRing);}
+}
+const _bq=new THREE.Vector3();
+function updateSkyBodies(ang,day,sd){const cp=camera.position,dist=1500,sun=RX.on?RU.sunDir.value:sd;const lin=RX.on?1:0,inten=1.5*PL.sunInt;
+  for(const o of skyBodies){const b=o.b,a=ang+b.phi;const dd=_bq.set(Math.cos(a),Math.sin(a),0.32+b.tilt).normalize();
+    o.mesh.position.copy(cp).addScaledVector(dd,dist);o.mesh.scale.setScalar(dist*Math.tan(b.deg*Math.PI/360));o.mesh.visible=dd.y>-0.25;
+    const u=o.mesh.material.uniforms;u.sunDir.value.copy(sun);u.lin.value=lin;u.inten.value=inten;u.spin.value=RU.time.value*0.002;u.fade.value=day*PL.atmo*(b.dot?0.97:0.22);
+    if(o.ring){const ru=o.ring.material.uniforms;ru.sunDir.value.copy(sun);ru.lin.value=lin;ru.inten.value=inten;ru.fade.value=u.fade.value;o.ring.getWorldQuaternion(new THREE.Quaternion());ru.ringN.value.set(0,0,1).applyQuaternion(o.ring.getWorldQuaternion(new THREE.Quaternion()));}}
+  if(skyRing){skyRing.position.set(cp.x,cp.y-900,cp.z);const ru=skyRing.material.uniforms;ru.sunDir.value.copy(sun);ru.lin.value=lin;ru.inten.value=inten*1.2;ru.fade.value=day*0.15;skyRing.visible=!player.headInWater;}}
+function setDim(dim){
+  world.dimEdits[world.dim]=world.edits;world.dimFurnaces[world.dim]=furnaces;
+  world.dim=dim;PL=PLANETS[dim];initNoise(world.seed+PL.seed);
+  world.edits=world.dimEdits[dim]||(world.dimEdits[dim]=new Map());furnaces=world.dimFurnaces[dim]||(world.dimFurnaces[dim]=new Map());
+  applyFastSky();buildSkyBodies();
+}
+function placeArrivalTeleporter(){const tx=Math.floor(player.pos.x)+2,tz=Math.floor(player.pos.z);const ty=Math.floor(player.pos.y);if(ty<H)recordEdit(tx>>4,tz>>4,(tx&15)+16*((tz&15)+16*ty),I.planet_teleporter,0);}
+function teleportTo(dim){
+  if(!PLANETS[dim])return;if(dim===world.dim){chat('You are already on '+PL.name,'#aaa');return;}
+  world.dimPos[world.dim]={x:player.pos.x,y:player.pos.y,z:player.pos.z,yaw:player.yaw};world.dimSpawn[world.dim]={x:player.spawn.x,y:player.spawn.y,z:player.spawn.z};
+  clearWorld();setDim(dim);
+  const pos=world.dimPos[dim];
+  if(pos){player.pos.set(pos.x,pos.y,pos.z);player.yaw=pos.yaw||0;}
+  else{const [x,h,z]=findSpawn();player.pos.set(x+0.5,h+1.01,z+0.5);placeArrivalTeleporter();}
+  const spn=world.dimSpawn[dim];if(spn)player.spawn.set(spn.x,spn.y,spn.z);else{player.spawn.copy(player.pos);world.dimSpawn[dim]={x:player.pos.x,y:player.pos.y,z:player.pos.z};}
+  player.vel.set(0,0,0);player.fallStart=null;player.flying=false;
+  const w=document.getElementById('warp');w.style.transition='none';w.style.opacity=1;setTimeout(()=>{w.style.transition='opacity 1.2s';w.style.opacity=0;},60);
+  tone(120,0.4,1.2,'sawtooth',900);tone(300,0.3,1.0,'sine',1600);playNoise('glass',0.5,0.4,1.0);
+  state='loading';showScreen('loading');document.getElementById('loadmsg').textContent='Teleporting to '+PL.name;RX.firstAdapt=true;
+  saveWorld(true);
+}
+function showPlanetTitle(){const t=document.getElementById('planettitle');t.innerHTML=PL.name+'<div style="font-size:26px">Gravity: '+PL.g+' g</div>';t.style.opacity=1;setTimeout(()=>t.style.opacity=0,3500);}
+function planetIcon(dim){const c=document.createElement('canvas');c.width=c.height=192;const g=c.getContext('2d');
+  if(dim==='saturn'){g.save();g.translate(96,96);g.rotate(-0.35);g.scale(1,0.3);g.strokeStyle='rgba(220,200,150,0.85)';g.lineWidth=16;g.beginPath();g.arc(0,0,84,0,Math.PI*2);g.stroke();g.restore();}
+  const r=dim==='saturn'?50:dim==='moon'?60:72;g.save();g.beginPath();g.arc(96,96,r,0,Math.PI*2);g.clip();g.drawImage(bodyTex(dim).image,0,0,256,128,96-r*2,96-r,r*4,r*2);
+  const gr=g.createRadialGradient(96-r*0.4,96-r*0.4,r*0.1,96,96,r*1.05);gr.addColorStop(0,'rgba(255,255,255,0.15)');gr.addColorStop(0.6,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,0.75)');g.fillStyle=gr;g.fillRect(0,0,192,192);g.restore();
+  if(dim==='saturn'){g.save();g.translate(96,96);g.rotate(-0.35);g.scale(1,0.3);g.strokeStyle='rgba(230,210,160,0.9)';g.lineWidth=16;g.beginPath();g.arc(0,0,84,0,Math.PI);g.stroke();g.restore();}
+  return c;}
+function openPlanets(){if(state!=='playing')return;state='portal';for(const k in keys)keys[k]=false;mouseL=mouseR=false;document.exitPointerLock&&document.exitPointerLock();
+  const list=document.getElementById('planetlist');list.innerHTML='';
+  for(const dim of PLANET_ORDER){const P=PLANETS[dim];const card=document.createElement('div');card.className='pcard'+(dim===world.dim?' here':'');card.appendChild(planetIcon(dim));
+    card.insertAdjacentHTML('beforeend',`<div class="pn">${P.name}</div><div class="pg">${dim===world.dim?'You are here':'Gravity: '+P.g+' g'}</div><div class="pd">${P.desc}</div>`);
+    if(dim!==world.dim)card.onclick=()=>{showScreen('');teleportTo(dim);};list.appendChild(card);}
+  showScreen('planets');}
+function closePlanets(){showScreen('');state='playing';lockPointer();}
 function makeSky(){
   const sc=document.createElement('canvas');sc.width=sc.height=32;const s=sc.getContext('2d');
   s.fillStyle='rgba(255,255,200,0.25)';s.fillRect(4,4,24,24);s.fillStyle='#fffbe0';s.fillRect(8,8,16,16);s.fillStyle='#ffffff';s.fillRect(10,10,12,12);
@@ -1147,7 +1361,7 @@ function updateEntities(dt){
   for(let i=entities.length-1;i>=0;i--){const e=entities[i];
     if(e.type==='item'){e.age+=dt;
       const inW=getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z))===I.water;
-      e.vel.y-=(inW?4:20)*dt;if(inW)e.vel.y=Math.max(e.vel.y,-1);
+      e.vel.y-=(inW?4:20)*PL.g*dt;if(inW)e.vel.y=Math.max(e.vel.y,-1);
       const pc=new THREE.Vector3(player.pos.x,player.pos.y+0.8,player.pos.z);const dd=pc.distanceTo(e.pos);
       if(e.age>e.delay&&dd<1.8&&state!=='dead'){const dir=pc.sub(e.pos).normalize();e.vel.addScaledVector(dir,40*dt);
         if(dd<0.7){const left=addItem(e.id,e.count);if(left<e.count)sfxPop();if(left===0){scene.remove(e.mesh);entities.splice(i,1);continue;}else e.count=left;}}
@@ -1156,7 +1370,7 @@ function updateEntities(dt){
       e.mesh.position.set(e.pos.x,e.pos.y+0.15+Math.sin(e.age*3+e.phase)*0.06,e.pos.z);e.mesh.rotation.y=e.age*1.6+e.phase;
       if(e.age>300||e.pos.y<-20){scene.remove(e.mesh);entities.splice(i,1);}
     }else if(e.type==='falling'||e.type==='tnt'){
-      e.vel.y-=25*dt;e.vel.y=Math.max(e.vel.y,-40);e.pos.x+=e.vel.x*dt;e.pos.z+=e.vel.z*dt;e.vel.x*=Math.pow(0.05,dt);e.vel.z*=Math.pow(0.05,dt);
+      e.vel.y-=25*PL.g*dt;e.vel.y=Math.max(e.vel.y,-40);e.pos.x+=e.vel.x*dt;e.pos.z+=e.vel.z*dt;e.vel.x*=Math.pow(0.05,dt);e.vel.z*=Math.pow(0.05,dt);
       const ny=e.pos.y+e.vel.y*dt;const bx=Math.floor(e.pos.x),bz=Math.floor(e.pos.z);
       if(e.vel.y<0&&SOLID[getBlock(bx,Math.floor(ny),bz)]){e.pos.y=Math.floor(ny)+1;e.vel.y=0;
         if(e.type==='falling'){const cur=getBlock(bx,Math.floor(e.pos.y),bz);if(cur===0||cur===I.water||(BLOCKS[cur].replaceable)){setBlock(bx,Math.floor(e.pos.y),bz,e.id,0);sfxBlock(e.id,'place');}else spawnItem(e.id,1,e.pos.x,e.pos.y+0.5,e.pos.z);scene.remove(e.mesh);entities.splice(i,1);continue;}}
@@ -1168,7 +1382,7 @@ function updateEntities(dt){
     }
   }
   for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.life-=dt;if(p.life<=0){scene.remove(p.s);particles.splice(i,1);continue;}
-    p.vel.y-=16*dt;const np=p.s.position.clone().addScaledVector(p.vel,dt);if(entSolidAt(np.x,np.y,np.z)){p.vel.multiplyScalar(0.2);p.vel.y=0;}else p.s.position.copy(np);}
+    p.vel.y-=16*PL.g*dt;const np=p.s.position.clone().addScaledVector(p.vel,dt);if(entSolidAt(np.x,np.y,np.z)){p.vel.multiplyScalar(0.2);p.vel.y=0;}else p.s.position.copy(np);}
 }
 
 // =====================================================================
@@ -1213,7 +1427,7 @@ function updatePlayer(dt){
   p.vel.x+=(wx-p.vel.x)*k;p.vel.z+=(wz-p.vel.z)*k;
   if(p.flying){const vy=(jump?1:0)-(sneak?1:0);p.vel.y+=(vy*7.5-p.vel.y)*(1-Math.exp(-10*dt));}
   else if(p.inWater){p.vel.y-=9*dt;p.vel.y*=Math.pow(0.15,dt);if(jump)p.vel.y=Math.min(p.vel.y+26*dt,3.2);p.fallStart=null;}
-  else{p.vel.y-=32*dt;p.vel.y*=Math.pow(0.98,dt*20);if(p.vel.y<-78)p.vel.y=-78;if(jump&&p.onGround){p.vel.y=9;p.exhaustion+=p.sprinting?0.2:0.05;if(p.sprinting){p.vel.x+=fx*2;p.vel.z+=fz*2;}}}
+  else{p.vel.y-=32*PL.g*dt;p.vel.y*=Math.pow(0.98,dt*20);if(p.vel.y<-78)p.vel.y=-78;if(jump&&p.onGround){p.vel.y=Math.max(9,Math.sqrt(64*PL.g*1.3));p.exhaustion+=p.sprinting?0.2:0.05;if(p.sprinting){p.vel.x+=fx*2;p.vel.z+=fz*2;}}}
   const h=playerH();p.onGround=false;
   const steps=Math.ceil(Math.max(Math.abs(p.vel.x),Math.abs(p.vel.y),Math.abs(p.vel.z))*dt/0.3)||1;const sdt=dt/steps;
   let hitH=false;
@@ -1223,7 +1437,7 @@ function updatePlayer(dt){
   if(p.flying&&p.onGround)p.flying=false;
   // fall damage
   if(!p.onGround&&!p.flying&&!p.inWater){if(p.fallStart===null||p.pos.y>p.fallStart)p.fallStart=p.pos.y;}
-  if(p.onGround){if(p.fallStart!==null){const fd=p.fallStart-p.pos.y;if(fd>3.5&&!p.inWater){damage(Math.ceil(fd-3.5),'fell from a high place');const id=getBlock(Math.floor(p.pos.x),Math.floor(p.pos.y-0.5),Math.floor(p.pos.z));if(id)sfxBlock(id,'break');}}p.fallStart=null;}
+  if(p.onGround){if(p.fallStart!==null){const fd=p.fallStart-p.pos.y;if(fd*PL.g>3.5&&!p.inWater){damage(Math.ceil(fd*PL.g-3.5),'fell from a high place');const id=getBlock(Math.floor(p.pos.x),Math.floor(p.pos.y-0.5),Math.floor(p.pos.z));if(id)sfxBlock(id,'break');}}p.fallStart=null;}
   if(p.flying)p.fallStart=null;
   // footsteps & bobbing
   const hs=Math.hypot(p.vel.x,p.vel.z);
@@ -1260,6 +1474,7 @@ function tryPlace(){
     if(target.id===I.crafting_table){openInventory(3);return true;}
     if(target.id===I.furnace){openInventory({furnace:target.x+','+target.y+','+target.z});return true;}
     if(target.id===I.tnt){primeTNT(target.x,target.y,target.z);doSwing();return true;}
+    if(target.id===I.planet_teleporter){openPlanets();return true;}
   }
   const s=held();if(!s||RENDER[s.id]===5)return false;
   let px=target.x,py=target.y,pz=target.z;
@@ -1293,7 +1508,7 @@ function updateInteraction(dt){
     }
   }else{breakState.active=false;}
   if(!breakState.active)crackMesh.visible=false;
-  const hs=held();const interactT=target&&!player.sneaking&&(target.id===I.crafting_table||target.id===I.furnace||target.id===I.tnt);
+  const hs=held();const interactT=target&&!player.sneaking&&(target.id===I.crafting_table||target.id===I.furnace||target.id===I.tnt||target.id===I.planet_teleporter);
   if(mouseR&&!interactT&&canEat(hs)){if(hs.id!==eatId){eatId=hs.id;eatT=0;}eatT+=dt;eatSnd-=dt;if(eatSnd<=0&&eatT>0.25){eatSnd=0.21;playNoise('eat',0.45,0.8+Math.random()*0.4,0.1);eatParticles(hs.id);}if(eatT>=1.6){eatT=0;finishEating();}}
   else{eatT=0;if(mouseR&&placeCooldown<=0){if(tryPlace())placeCooldown=0.22;else placeCooldown=0.05;}}
 }
@@ -1330,7 +1545,7 @@ function finishEating(){const s=held();if(!s)return;const b=BLOCKS[s.id];const p
   tone(170,0.25,0.35,'sawtooth',90);
   if(gameMode==='survival'){s.count--;if(s.count<=0)inv[selected]=null;if(b.bowl){if(!inv[selected])inv[selected]={id:I.bowl,count:1};else if(addItem(I.bowl,1)>0)spawnItem(I.bowl,1,p.pos.x,p.pos.y+1,p.pos.z);}}
   renderHotbar();renderStats(true);}
-const furnaces=new Map();let curFurnace=null,furnaceVer=0,furnaceRendered=-1;
+let furnaces=new Map();let curFurnace=null,furnaceVer=0,furnaceRendered=-1;
 let SMELT={},FUEL={};
 function getFurnace(k){let f=furnaces.get(k);if(!f){f={in:null,fuel:null,out:null,burn:0,burnMax:0,cook:0};furnaces.set(k,f);}return f;}
 function dropFurnace(x,y,z){const k=x+','+y+','+z;const f=furnaces.get(k);if(!f)return;for(const s of [f.in,f.fuel,f.out])if(s)spawnItem(s.id,s.count,x+0.5,y+0.5,z+0.5);furnaces.delete(k);}
@@ -1374,6 +1589,8 @@ function updateChunks(budget){
 //  SKY / TIME
 // =====================================================================
 const SKY_DAY=new THREE.Color(0x78a7ff),SKY_NIGHT=new THREE.Color(0x05060c),SKY_SUNSET=new THREE.Color(0xd9773a),FOG_DAY=new THREE.Color(0xc0d8ff),tmpC=new THREE.Color();
+const EARTH_FAST={day:0x78a7ff,night:0x05060c,fog:0xc0d8ff,nfog:0x05060c,sunset:0xd9773a};
+function applyFastSky(){const f=PL.fast||EARTH_FAST;SKY_DAY.setHex(f.day);SKY_NIGHT.setHex(f.night);FOG_DAY.setHex(f.fog);SKY_SUNSET.setHex(f.sunset);}
 function updateSky(dt){
   if(state==='playing'||state==='inventory'||state==='chat'||state==='dead')dayTime=(dayTime+dt*20)%24000;
   const ang=(dayTime/24000)*Math.PI*2;const sh=Math.sin(ang);
@@ -1387,12 +1604,13 @@ function updateSky(dt){
   if(player.headInWater){U.fogColor.value.setRGB(0.05,0.12,0.4).multiplyScalar(0.3+0.7*day);U.fogNear.value=0;U.fogFar.value=14;scene.background=U.fogColor.value.clone();}
   else{U.fogColor.value.copy(fog);U.fogNear.value=rdBlocks*0.55;U.fogFar.value=rdBlocks*0.95;scene.background=tmpC.clone().lerp(fog,0.25);}
   const cp=camera.position;
-  const sd=new THREE.Vector3(Math.cos(ang),Math.sin(ang),0.0);
+  const sd=new THREE.Vector3(Math.cos(ang),Math.sin(ang),0.32).normalize();
+  sunMesh.scale.setScalar(PL.sunSize);updateSkyBodies(ang,day,sd);
   sunMesh.position.copy(cp).addScaledVector(sd,400);sunMesh.lookAt(cp);
   moonMesh.position.copy(cp).addScaledVector(sd,-400);moonMesh.lookAt(cp);
-  sunMesh.visible=moonMesh.visible=!player.headInWater&&!RX.on;
-  stars.position.copy(cp);stars.rotation.z=ang;stars.material.opacity=Math.max(0,1-day*1.6)*0.9;
-  clouds.visible=opts.clouds&&!player.headInWater&&!RX.on;if(RX.on){stars.visible=false;updateRealSky(ang,dt);}else stars.visible=true;clouds.position.set(cp.x,160.5,cp.z);const cs=Math.max(400,rdBlocks*3);clouds.scale.set(cs,cs,1);cloudMat.uniforms.fadeFar.value=cs*0.5;
+  sunMesh.visible=moonMesh.visible=!player.headInWater&&!RX.on;if(world.dim!=='earth')moonMesh.visible=false;
+  stars.position.copy(cp);stars.rotation.z=ang;stars.material.opacity=PL.stars?0.9:Math.max(0,1-day*1.6)*0.9;
+  clouds.visible=opts.clouds&&!player.headInWater&&!RX.on&&PL.clouds>=0.5;if(RX.on){stars.visible=false;updateRealSky(ang,dt);}else stars.visible=true;clouds.position.set(cp.x,160.5,cp.z);const cs=Math.max(400,rdBlocks*3);clouds.scale.set(cs,cs,1);cloudMat.uniforms.fadeFar.value=cs*0.5;
   cloudMat.uniforms.off.value.x+=dt*0.6;cloudMat.uniforms.bright.value=0.25+0.75*day;
 }
 let waterT=0,waterAcc=0;
@@ -1487,6 +1705,7 @@ function setupRecipes(){
   RECIPES.push({shapeless:[I.bowl,I.beetroot,I.beetroot,I.beetroot,I.beetroot,I.beetroot,I.beetroot],out:[I.beetroot_soup,1]});
   RECIPES.push({shapeless:[I.bowl,I.brown_mushroom,I.red_mushroom],out:[I.mushroom_stew,1]});
   RECIPES.push({shapeless:[I.pumpkin,I.wheat,I.wheat],out:[I.pumpkin_pie,1]});
+  RECIPES.push({shapeless:[I.diamond_ore,I.diamond_ore,I.diamond_ore,I.iron_ore,I.iron_ore,I.iron_ore],out:[I.planet_teleporter,1]});
   // furnace
   SMELT={[I.sand]:I.glass,[I.cobblestone]:I.stone,[I.potato]:I.baked_potato,[I.raw_porkchop]:I.cooked_porkchop,[I.raw_beef]:I.steak,[I.raw_chicken]:I.cooked_chicken};
   FUEL={[I.coal_ore]:80,[I.coal_block]:800,[I.crafting_table]:15,[I.bookshelf]:15,[I.dead_bush]:5,[I.bowl]:5};
@@ -1573,11 +1792,12 @@ function runCommand(s){const a=s.slice(1).trim().split(/\s+/);const c=a[0].toLow
   else if(c==='time'){if(a[1]==='set'){const v=a[2];const map={day:1000,noon:6000,night:13000,midnight:18000,sunrise:23000,sunset:12000};const t=map[v]!==undefined?map[v]:parseInt(v);if(isNaN(t))chat('Invalid time','#f55');else{dayTime=((t%24000)+24000)%24000;chat('Set the time to '+t,'#aaa');}}else if(a[1]==='add'){dayTime=(dayTime+(parseInt(a[2])||0))%24000;}else chat('Usage: /time set <day|night|noon|midnight|value>','#f55');}
   else if(c==='tp'||c==='teleport'){const n=a.slice(1,4).map((v,i)=>v&&v.startsWith('~')?[player.pos.x,player.pos.y,player.pos.z][i]+(parseFloat(v.slice(1))||0):parseFloat(v));if(n.length===3&&n.every(v=>!isNaN(v))){player.pos.set(n[0],n[1],n[2]);player.vel.set(0,0,0);player.fallStart=null;chat(`Teleported to ${n.map(v=>v.toFixed(1)).join(', ')}`,'#aaa');}else chat('Usage: /tp <x> <y> <z>','#f55');}
   else if(c==='give'){const k=(a[1]||'').replace('minecraft:','');const id=BID[k];const n=Math.max(1,Math.min(2304,parseInt(a[2])||1));if(id===undefined||!id)chat('Unknown item: '+k,'#f55');else{addItem(id,n);chat(`Gave ${n} [${BLOCKS[id].name}] to Player`,'#aaa');}}
+  else if(c==='planet'){const k=(a[1]||'').toLowerCase();if(PLANETS[k])teleportTo(k);else chat('Usage: /planet <'+PLANET_ORDER.join('|')+'>','#f55');}
   else if(c==='seed')chat('Seed: ['+world.seed+']','#aaa');
   else if(c==='kill'){if(gameMode==='creative'){gameMode='survival';damage(999,'fell out of the world');gameMode='creative';}else damage(999,'fell out of the world');}
   else if(c==='spawnpoint'){player.spawn.copy(player.pos);chat('Set spawn point','#aaa');}
   else if(c==='clear'){for(let i=0;i<36;i++)inv[i]=null;renderHotbar();chat('Cleared inventory','#aaa');}
-  else if(c==='help')chat('Commands: /gamemode, /time set, /tp, /give <block> [n], /seed, /kill, /spawnpoint, /clear','#ff5');
+  else if(c==='help')chat('Commands: /gamemode, /time set, /tp, /give <block> [n], /planet <name>, /seed, /kill, /spawnpoint, /clear','#ff5');
   else chat('Unknown command. Type /help for help.','#f55');}
 chatIn.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){const v=chatIn.value.trim();if(v){if(v.startsWith('/'))runCommand(v);else chat('<Player> '+v);}closeChat();}else if(e.key==='Escape'){closeChat();}});
 
@@ -1616,6 +1836,7 @@ function setupMenus(){
   document.getElementById('b-optdone').onclick=()=>{saveOpts();showScreen(optReturn);};
   document.getElementById('b-controls').onclick=()=>{const c=document.getElementById('controls');c.style.display=c.style.display==='none'?'block':'none';};
   document.getElementById('b-resume').onclick=resumeGame;
+  document.getElementById('b-pclose').onclick=closePlanets;
   document.getElementById('b-quit').onclick=quitToTitle;
   document.getElementById('b-respawn').onclick=respawn;
   document.getElementById('b-dtitle').onclick=()=>{respawn(true);quitToTitle();};
@@ -1632,16 +1853,21 @@ function syncOpts(){const L={rd:v=>'Render Distance: '+v+' chunks',fov:v=>'FOV: 
 // =====================================================================
 //  SAVE / LOAD / LIFECYCLE
 // =====================================================================
-function saveWorld(){if(state==='title'||state==='loading')return;try{
-  const ed={};for(const [k,m] of world.edits){if(m.size)ed[k]=[...m];}
-  const sv={seed:world.seed,mode:gameMode,time:dayTime,player:{x:player.pos.x,y:player.pos.y,z:player.pos.z,yaw:player.yaw,pitch:player.pitch,health:player.health,food:player.food,sat:player.saturation,exh:player.exhaustion,abs:player.absorption,eff:player.effects,flying:player.flying,sx:player.spawn.x,sy:player.spawn.y,sz:player.spawn.z},inv,selected,edits:ed,furnaces:[...furnaces]};
+function saveWorld(force){if(!force&&(state==='title'||state==='loading'))return;try{
+  world.dimEdits[world.dim]=world.edits;world.dimFurnaces[world.dim]=furnaces;world.dimSpawn[world.dim]={x:player.spawn.x,y:player.spawn.y,z:player.spawn.z};
+  const de={},df={};for(const dm in world.dimEdits){const ed={};for(const [k,m] of world.dimEdits[dm]){if(m.size)ed[k]=[...m];}de[dm]=ed;}for(const dm in world.dimFurnaces)df[dm]=[...world.dimFurnaces[dm]];
+  const sv={seed:world.seed,mode:gameMode,time:dayTime,player:{x:player.pos.x,y:player.pos.y,z:player.pos.z,yaw:player.yaw,pitch:player.pitch,health:player.health,food:player.food,sat:player.saturation,exh:player.exhaustion,abs:player.absorption,eff:player.effects,flying:player.flying,sx:player.spawn.x,sy:player.spawn.y,sz:player.spawn.z},inv,selected,dim:world.dim,dimEdits:de,dimFurnaces:df,dimPos:world.dimPos,dimSpawn:world.dimSpawn};
   localStorage.setItem('mcweb_world',JSON.stringify(sv));}catch(e){console.warn('save failed',e);}}
 function clearWorld(){for(const c of world.chunks.values()){if(c.group){scene.remove(c.group);for(const m of c.meshes)if(m)m.geometry.dispose();}}world.chunks.clear();lastChunk=null;
   for(const e of entities)scene.remove(e.mesh);entities.length=0;for(const p of particles)scene.remove(p.s);particles.length=0;lastPCX=null;}
 function findSpawn(){for(let r=0;r<4000;r+=8){for(let a=0;a<8;a++){const x=Math.round(Math.cos(a*Math.PI/4)*r),z=Math.round(Math.sin(a*Math.PI/4)*r);const h=heightAt(x,z);const b=biomeAt(x,z,h);if(h>SEA+1&&b!==BIOME_OCEAN&&b!==BIOME_MOUNTAINS)return [x,h,z];}}return [0,heightAt(0,0),0];}
 function startWorld(sv){
-  clearWorld();world.seed=sv.seed|0;initNoise(world.seed);world.edits=new Map();
-  if(sv.edits)for(const k in sv.edits)world.edits.set(k,new Map(sv.edits[k]));
+  clearWorld();world.seed=sv.seed|0;
+  world.dimEdits={};world.dimFurnaces={};world.dimPos=sv.dimPos||{};world.dimSpawn=sv.dimSpawn||{};
+  const toMap=o=>{const m=new Map();for(const k in o)m.set(k,new Map(o[k]));return m;};
+  if(sv.dimEdits)for(const dm in sv.dimEdits)world.dimEdits[dm]=toMap(sv.dimEdits[dm]);else if(sv.edits)world.dimEdits.earth=toMap(sv.edits);
+  if(sv.dimFurnaces)for(const dm in sv.dimFurnaces)world.dimFurnaces[dm]=new Map(sv.dimFurnaces[dm]);else if(sv.furnaces)world.dimFurnaces.earth=new Map(sv.furnaces);
+  world.dim='earth';world.edits=world.dimEdits.earth||new Map();furnaces=world.dimFurnaces.earth||new Map();setDim(PLANETS[sv.dim]?sv.dim:'earth');
   gameMode=sv.mode||'survival';dayTime=sv.time!==undefined?sv.time:1000;
   for(let i=0;i<36;i++)inv[i]=null;selected=sv.selected||0;
   if(sv.inv)sv.inv.forEach((s,i)=>{if(s&&BLOCKS[s.id])inv[i]={id:s.id,count:s.count};});
@@ -1649,7 +1875,7 @@ function startWorld(sv){
   if(sv.player){const p=sv.player;player.pos.set(p.x,p.y,p.z);player.yaw=p.yaw||0;player.pitch=p.pitch||0;player.health=p.health||20;player.flying=!!p.flying;player.spawn.set(p.sx!==undefined?p.sx:p.x,p.sy!==undefined?p.sy:p.y,p.sz!==undefined?p.sz:p.z);}
   else{const [x,h,z]=findSpawn();player.pos.set(x+0.5,h+1.01,z+0.5);player.spawn.copy(player.pos);player.yaw=0;player.pitch=0;player.health=20;player.flying=false;}
   player.vel.set(0,0,0);const sp=sv.player||{};player.food=sp.food!==undefined?sp.food:20;player.saturation=sp.sat!==undefined?sp.sat:5;player.exhaustion=sp.exh||0;player.absorption=sp.abs||0;player.effects=Object.assign({poison:0,hunger:0,regen:0,absorb:0,pT:0,rT:0},sp.eff||{});player.air=300;player.fallStart=null;
-  furnaces.clear();if(sv.furnaces)for(const [k,f] of sv.furnaces)furnaces.set(k,f);statSig='';
+  statSig='';const dsp=world.dimSpawn[world.dim];if(dsp)player.spawn.set(dsp.x,dsp.y,dsp.z);
   state='loading';showScreen('loading');document.getElementById('loadmsg').textContent='Generating terrain';
 }
 function respawn(noLock){player.pos.copy(player.spawn);player.vel.set(0,0,0);player.health=20;player.food=20;player.saturation=5;player.exhaustion=0;player.absorption=0;player.effects={poison:0,hunger:0,regen:0,absorb:0,pT:0,rT:0};player.air=300;player.fallStart=null;renderStats(true);showScreen('');state='playing';if(noLock!==true)lockPointer();}
@@ -1665,6 +1891,7 @@ document.addEventListener('keydown',e=>{
   if(state==='chat')return;
   if(e.code==='F3'||e.code==='F1'||e.code==='F5'||e.code==='F6'||(e.code==='KeyW'&&e.ctrlKey)||e.code==='Tab')e.preventDefault();
   if(state==='inventory'){if(e.code==='KeyE'||e.code==='Escape')closeInventory();return;}
+  if(state==='portal'){if(e.code==='Escape'||e.code==='KeyE')closePlanets();return;}
   if(state!=='playing'){return;}
   if(e.code==='Space'&&!e.repeat){const now=performance.now();if(gameMode==='creative'&&now-lastSpaceTap<300){player.flying=!player.flying;player.vel.y=0;lastSpaceTap=0;}else lastSpaceTap=now;}
   if(e.code==='KeyW'&&!e.repeat){const now=performance.now();if(now-lastWTap<300&&player.food>6)player.sprinting=true;lastWTap=now;}
@@ -1697,7 +1924,7 @@ function updateDebug(dt){dbgT+=dt;if(!showDebug||dbgT<0.2)return;dbgT=0;const p=
   const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);const facing=Math.abs(fx)>Math.abs(fz)?(fx>0?'east (Towards positive X)':'west (Towards negative X)'):(fz>0?'south (Towards positive Z)':'north (Towards negative Z)');
   let meshed=0;for(const c of world.chunks.values())if(c.meshed)meshed++;
   const L=[`Minecraft Web Edition 1.0 (${gameMode})`,`${fps} fps`,`C: ${meshed}/${world.chunks.size} chunks  E: ${entities.length}  P: ${particles.length}`,'',`XYZ: ${p.x.toFixed(3)} / ${p.y.toFixed(5)} / ${p.z.toFixed(3)}`,`Block: ${bx} ${by} ${bz}`,`Chunk: ${bx&15} ${by} ${bz&15} in ${bx>>4} ${bz>>4}`,`Facing: ${facing} (${(((-player.yaw*180/Math.PI)%360+540)%360-180).toFixed(1)} / ${(-player.pitch*180/Math.PI).toFixed(1)})`,
-    `Biome: ${BIOME_NAMES[biomeAt(bx,bz)]}`,`Day ${Math.floor(dayTime)} (${(U.daylight.value*15).toFixed(0)} sky)`,`Seed: ${world.seed}`,`Flying: ${player.flying}  Sprint: ${player.sprinting}  Ground: ${player.onGround}`,`Food: ${player.food}  Saturation: ${player.saturation.toFixed(1)}  Exhaustion: ${player.exhaustion.toFixed(2)}`];
+    `Biome: ${world.dim==='earth'?BIOME_NAMES[biomeAt(bx,bz)]:PL.name}`,`Day ${Math.floor(dayTime)} (${(U.daylight.value*15).toFixed(0)} sky)`,`Seed: ${world.seed}`,`Flying: ${player.flying}  Sprint: ${player.sprinting}  Ground: ${player.onGround}`,`Food: ${player.food}  Saturation: ${player.saturation.toFixed(1)}  Exhaustion: ${player.exhaustion.toFixed(2)}`];
   dbgL.innerHTML=L.map(s=>s?`<span>${s}</span>`:'').join('\n');
   const R=[`JS: ${navigator.userAgent.match(/(Chrome|Firefox|Safari)\/[\d.]+/)?.[0]||'browser'}`,`Display: ${innerWidth}x${innerHeight}`,`Render distance: ${opts.rd}`,''];
   if(target)R.push(`Targeted Block: ${target.x}, ${target.y}, ${target.z}`,`minecraft:${BLOCKS[target.id].key}`);
@@ -1725,7 +1952,7 @@ function frame(now){
       // make sure player isn't inside terrain
       let guard=0;while(collides(player.pos.x,player.pos.y,player.pos.z,1.8)&&guard++<200)player.pos.y+=1;
       state='playing';showScreen('');document.getElementById('hud').classList.toggle('show',!hideHud);renderHotbar();renderStats();lockPointer();syncOpts();
-      chat('Welcome! Press E for inventory, T for chat, /help for commands.','#ff5');
+      if(world.dim!=='earth'){showPlanetTitle();chat('Welcome to '+PL.name+'! Use the Planet Teleporter to go home.','#c8f');}else chat('Welcome! Press E for inventory, T for chat, /help for commands.','#ff5');
     }
     camera.position.set(player.pos.x,player.pos.y+1.62,player.pos.z);updateSky(0);
     renderWorld(dt);return;
@@ -1768,7 +1995,7 @@ buildTextures();setupBlocks();
 for(const b of BLOCKS)if(b)I[b.key]=b.id;
 WAVE[I.oak_leaves]=WAVE[I.birch_leaves]=WAVE[I.spruce_leaves]=1;WAVE[I.water]=4;
 FURNACE_ID=I.furnace;FURNACE_LIT=TILE.furnace_front_lit;
-setupRecipes();makeMats();initRealMats();makeSky();makeOverlays();makeHand();makePlayerModel();makeIcons();setupMenus();syncOpts();
+setupRecipes();makeMats();initRealMats();makeSky();makeOverlays();buildSkyBodies();makeHand();makePlayerModel();makeIcons();setupMenus();syncOpts();
 if(opts.gfx==='real')setGraphics('real');
 requestAnimationFrame(frame);
 </script>
