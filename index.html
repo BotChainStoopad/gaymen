@@ -1067,7 +1067,7 @@ function setupRealTargets(){
     vec2 dir=vec2(-((lnw+lne)-(lsw+lse)),((lnw+lsw)-(lne+lse)));float red=max((lnw+lne+lsw+lse)*0.03125,1.0/128.0);float rcp=1.0/(min(abs(dir.x),abs(dir.y))+red);
     dir=clamp(dir*rcp,vec2(-8.0),vec2(8.0))*px;vec3 a=0.5*(texture2D(tIn,vUv+dir*(-1.0/6.0)).rgb+texture2D(tIn,vUv+dir*(1.0/6.0)).rgb);
     vec3 b=a*0.5+0.25*(texture2D(tIn,vUv-dir*0.5).rgb+texture2D(tIn,vUv+dir*0.5).rgb);float lb=dot(b,L);gl_FragColor=vec4((lb<lmin||lb>lmax)?a:b,1.0);}`,{tIn:{value:null},px:{value:new THREE.Vector2()}});
-  RX.resize=()=>{for(const k in RT)if(RT[k])RT[k].dispose();RT={};
+  RX.resize=()=>{const keep={lum:RT.lum,adA:RT.adA,adB:RT.adB};for(const k in RT)if(RT[k]&&!(k in keep))RT[k].dispose();RT={};
     const v=new THREE.Vector2();renderer.getDrawingBufferSize(v);const w=Math.max(2,v.x*RX.scale|0),h=Math.max(2,v.y*RX.scale|0);RX.w=w;RX.h=h;
     const mk=(W,H,o)=>new THREE.WebGLRenderTarget(Math.max(1,W|0),Math.max(1,H|0),Object.assign({type:RX.type,format:THREE.RGBAFormat,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:false,stencilBuffer:false},o||{}));
     const dt=new THREE.DepthTexture(w,h);dt.type=THREE.UnsignedIntType;
@@ -1076,7 +1076,7 @@ function setupRealTargets(){
     const sdt=new THREE.DepthTexture(RX.shadowSize,RX.shadowSize);sdt.type=THREE.UnsignedIntType;
     RT.shadow=new THREE.WebGLRenderTarget(RX.shadowSize,RX.shadowSize,{type:THREE.UnsignedByteType,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,depthBuffer:true,depthTexture:sdt});
     for(let l=0;l<4;l++){const W=Math.max(1,w>>(l+2)),H=Math.max(1,h>>(l+2));RT['ba'+l]=mk(W,H);RT['bb'+l]=mk(W,H);}
-    RT.rays=mk(w/4,h/4);RT.lum=mk(1,1);RT.adA=mk(1,1);RT.adB=mk(1,1);RT.ldr=mk(w,h,{type:THREE.UnsignedByteType});RX.firstAdapt=true;RX.shadowDirty=true;
+    RT.rays=mk(w/4,h/4);RT.lum=keep.lum||mk(1,1);RT.adA=keep.adA||mk(1,1);RT.adB=keep.adB||mk(1,1);RT.ldr=mk(w,h,{type:THREE.UnsignedByteType});if(!keep.adA)RX.firstAdapt=true;RX.shadowDirty=true;
     RU.shadowMap.value=RT.shadow.depthTexture;RU.shadowTexel.value=1/RX.shadowSize;RU.reflTex.value=RT.refl.texture;RU.refrTex.value=RT.refr.texture;RU.resolution.value.set(w,h);};
   RX.resize();RX.ready=true;return true;
 }
@@ -1103,12 +1103,12 @@ function updateRealSky(ang,dt){
   skyDome.position.copy(camera.position);scene.background=null;
 }
 function updateShadowCam(){
-  const S=RQ[opts.rq].S;if(shadowCam.right!==S){shadowCam.left=-S;shadowCam.right=S;shadowCam.top=S;shadowCam.bottom=-S;}const c=_v1.set(Math.floor(player.pos.x),Math.floor(player.pos.y),Math.floor(player.pos.z));const L=RU.lightDir.value;
+  const S=RQ[opts.rq].S;if(shadowCam.right!==S){shadowCam.left=-S;shadowCam.right=S;shadowCam.top=S;shadowCam.bottom=-S;}const c=_v1.set(Math.floor(player.pos.x),Math.floor(player.pos.y),Math.floor(player.pos.z));const ld=RU.lightDir.value;if(!RX.sl||RX.sl.dot(ld)<0.99999)RX.sl=ld.clone();const L=RX.sl;
   shadowCam.up.set(0,0,1);shadowCam.position.copy(c).addScaledVector(L,250);shadowCam.lookAt(c);shadowCam.updateMatrixWorld();
   const texel=2*S/RX.shadowSize;const e=shadowCam.matrixWorld.elements;const r=_v2.set(e[0],e[1],e[2]),u=_v3.set(e[4],e[5],e[6]);
   const dr=Math.round(c.dot(r)/texel)*texel-c.dot(r),du=Math.round(c.dot(u)/texel)*texel-c.dot(u);c.addScaledVector(r,dr).addScaledVector(u,du);
   shadowCam.position.copy(c).addScaledVector(L,250);shadowCam.lookAt(c);shadowCam.updateMatrixWorld();shadowCam.updateProjectionMatrix();
-  RU.shadowMatrix.value.multiplyMatrices(shadowCam.projectionMatrix,shadowCam.matrixWorldInverse);
+  RU.shadowMatrix.value.multiplyMatrices(shadowCam.projectionMatrix,shadowCam.matrixWorldInverse);RX.lastShadowL=L.clone();
 }
 function renderRealistic(dt){
   const vis=[selBox.visible,crackMesh.visible];
@@ -1161,7 +1161,7 @@ function waterInView(){_pm.multiplyMatrices(camera.projectionMatrix,camera.matri
   for(const c of world.chunks.values()){const m=c.meshes[2];if(c.hasWater&&m&&c.group.visible){if(!m.geometry.boundingSphere)m.geometry.computeBoundingSphere();_bs.copy(m.geometry.boundingSphere).applyMatrix4(c.group.matrixWorld);if(_frus.intersectsSphere(_bs))return true;}}return false;}
 const _bs=new THREE.Sphere();
 function dynamicRes(dt){if(!opts.dynres||!RX.ready)return;RX.dtAcc+=dt;RX.dtN++;RX.cool-=dt;if(RX.dtAcc<0.75)return;const avg=RX.dtAcc/RX.dtN;RX.dtAcc=0;RX.dtN=0;const max=RQ[opts.rq].scale;let s=RX.scale;
-  if(avg>1/48&&s>0.5)s=Math.max(0.5,s-(avg>1/30?0.15:0.08)),RX.cool=6;else if(avg<1/57&&s<max&&RX.cool<=0)s=Math.min(max,s+0.05),RX.cool=2;
+  if(avg>1/45&&s>0.5)s=Math.max(0.5,s-(avg>1/30?0.15:0.08)),RX.cool=10;else if(avg<1/58&&s<max&&RX.cool<=0)s=Math.min(max,s+0.05),RX.cool=4;
   if(s!==RX.scale){RX.scale=s;RX.resize();}}
 function renderMedium(dt){RX.frame++;
   if(RX.shadowDirty||RX.frame%3===0){RX.shadowDirty=false;updateShadowCam();renderer.setRenderTarget(RT.shadow);renderer.clear(true,true,false);scene.overrideMaterial=shadowMat;renderer.render(scene,shadowCam);scene.overrideMaterial=null;}
@@ -1343,7 +1343,7 @@ function saveOpts(){try{localStorage.setItem('mcweb_opts',JSON.stringify(opts));
 let state='title',prevState='title';
 let gameMode='survival';
 let dayTime=1000;
-const player={pos:new THREE.Vector3(),vel:new THREE.Vector3(),yaw:0,pitch:0,onGround:false,flying:false,sprinting:false,sneaking:false,health:20,burn:0,burnT:0,frz:0,food:20,saturation:5,exhaustion:0,foodT:0,absorption:0,effects:{poison:0,hunger:0,regen:0,absorb:0,pT:0,rT:0},air:300,fallStart:null,inWater:false,headInWater:false,walkDist:0,stepDist:0,spawn:new THREE.Vector3(),hurtTime:0,regenT:0,airT:0,eyeH:1.62,view:0};
+const player={pos:new THREE.Vector3(),vel:new THREE.Vector3(),yaw:0,pitch:0,onGround:false,flying:false,sprinting:false,sneaking:false,health:20,bobAmp:0,camDist:4,burn:0,burnT:0,frz:0,food:20,saturation:5,exhaustion:0,foodT:0,absorption:0,effects:{poison:0,hunger:0,regen:0,absorb:0,pT:0,rT:0},air:300,fallStart:null,inWater:false,headInWater:false,walkDist:0,stepDist:0,spawn:new THREE.Vector3(),hurtTime:0,regenT:0,airT:0,eyeH:1.62,view:0};
 const inv=new Array(36).fill(null);let selected=0;let cursor=null;
 let craftGrid=[],craftSize=2,craftResult=null;
 const keys={};let mouseL=false,mouseR=false;
@@ -1933,7 +1933,7 @@ function updateHand(dt){
   if(id!==handId){if(handMesh){handScene.remove(handMesh);handMesh=null;}handId=id;if(id){handMesh=new THREE.Mesh(blockGeo(id),handItemMat);handScene.add(handMesh);}}
   if(swing.t<1)swing.t=Math.min(1,swing.t+dt/0.3);
   const st=swing.t<1?swing.t:1;const sw=Math.sin(Math.sqrt(st)*Math.PI),sw2=Math.sin(st*Math.PI);
-  const bobA=opts.bob?player.walkDist:0;const bx=Math.sin(bobA*Math.PI)*0.025,by=-Math.abs(Math.cos(bobA*Math.PI))*0.03;
+  const bobA=player.walkDist,bam=opts.bob?player.bobAmp:0;const bx=Math.sin(bobA*Math.PI)*0.025*bam,by=-Math.abs(Math.cos(bobA*Math.PI))*0.03*bam;
   handItemMat.color.setScalar(0.35+0.65*U.daylight.value);
   armMesh.visible=!id&&player.view===0;
   if(handMesh){handMesh.visible=player.view===0;const cross=RENDER[id]>=4;
@@ -2115,10 +2115,12 @@ chatIn.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){co
 // =====================================================================
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('show',s.id===id));}
 const ctp=document.getElementById('clicktoplay');
-function lockPointer(){const el=renderer.domElement;try{const r=el.requestPointerLock();if(r&&r.catch)r.catch(()=>{ctp.classList.add('show');});}catch(e){ctp.classList.add('show');}}
+function lockPointer(){const el=renderer.domElement;const plain=()=>{try{const r=el.requestPointerLock();if(r&&r.catch)r.catch(()=>{ctp.classList.add('show');});}catch(e){ctp.classList.add('show');}};
+  try{const r=el.requestPointerLock({unadjustedMovement:true});if(r&&r.catch)r.catch(plain);else if(!r)plain();}catch(e){plain();}}
+const mouseF={skip:0,ax:0,ay:0};
 ctp.addEventListener('click',()=>{ctp.classList.remove('show');lockPointer();});
 document.addEventListener('pointerlockchange',()=>{const locked=document.pointerLockElement===renderer.domElement;
-  if(locked){ctp.classList.remove('show');}
+  if(locked){ctp.classList.remove('show');mouseF.skip=2;mouseF.ax=mouseF.ay=0;}
   else if(state==='playing'){pauseGame();}});
 document.addEventListener('pointerlockerror',()=>{if(state==='playing')ctp.classList.add('show');});
 function pauseGame(){updatePauseNet();state='paused';for(const k in keys)keys[k]=false;mouseL=mouseR=false;showScreen('pause');saveWorld();}
@@ -2227,7 +2229,12 @@ renderer.domElement.addEventListener('mousedown',e=>{if(state!=='playing')return
   else if(e.button===2){mouseR=true;placeCooldown=0;}else if(e.button===1){e.preventDefault();pickBlock();}});
 document.addEventListener('mouseup',e=>{if(e.button===0)mouseL=false;if(e.button===2)mouseR=false;});
 document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('mousemove',e=>{if(state!=='playing'||document.pointerLockElement!==renderer.domElement)return;const s=0.0022*opts.sens;player.yaw-=e.movementX*s;player.pitch-=e.movementY*s;player.pitch=Math.max(-Math.PI/2+0.001,Math.min(Math.PI/2-0.001,player.pitch));});
+document.addEventListener('mousemove',e=>{if(state!=='playing'||document.pointerLockElement!==renderer.domElement)return;
+  const dx=e.movementX||0,dy=e.movementY||0;if(mouseF.skip>0){mouseF.skip--;return;}
+  // browsers occasionally report one huge bogus jump while the pointer is locked - ignore it
+  if((Math.abs(dx)>250&&Math.abs(dx)>6*mouseF.ax+60)||(Math.abs(dy)>250&&Math.abs(dy)>6*mouseF.ay+60))return;
+  mouseF.ax=mouseF.ax*0.7+Math.abs(dx)*0.3;mouseF.ay=mouseF.ay*0.7+Math.abs(dy)*0.3;
+  const s=0.0022*opts.sens;player.yaw-=dx*s;player.pitch-=dy*s;player.pitch=Math.max(-Math.PI/2+0.001,Math.min(Math.PI/2-0.001,player.pitch));});
 document.addEventListener('wheel',e=>{if(state!=='playing')return;selected=(selected+(e.deltaY>0?1:8))%9;renderHotbar();showItemName();},{passive:true});
 window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);if(RX.ready)RX.resize();camera.aspect=handCam.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();handCam.updateProjectionMatrix();});
 
@@ -2279,12 +2286,14 @@ function frame(now){
   // camera
   const sprintFov=(player.sprinting?1.12:1)*(bow.drawing?1-0.18*bowPower(bow.t):1);camera.fov+=(opts.fov*sprintFov-camera.fov)*Math.min(1,dt*10);camera.updateProjectionMatrix();
   const eyeH=player.sneaking?1.27:1.62;player.eyeH+=(eyeH-player.eyeH)*Math.min(1,dt*15);
-  const bob=opts.bob&&player.onGround?player.walkDist:0;
-  const bobY=opts.bob?-Math.abs(Math.cos(bob*Math.PI))*0.05:0,bobX=opts.bob?Math.sin(bob*Math.PI)*0.03:0;
+  const moving=player.onGround&&!player.flying&&Math.hypot(player.vel.x,player.vel.z)>0.5;player.bobAmp+=((moving?1:0)-player.bobAmp)*Math.min(1,dt*6);
+  const bph=player.walkDist*Math.PI,bam=opts.bob?player.bobAmp:0;
+  const bobY=-Math.abs(Math.cos(bph))*0.05*bam,bobX=Math.sin(bph)*0.03*bam;
   const ex=player.pos.x+Math.cos(player.yaw)*bobX,ey=player.pos.y+player.eyeH+bobY,ez=player.pos.z-Math.sin(player.yaw)*bobX;
   if(player.view===0){camera.position.set(ex,ey,ez);camera.rotation.set(player.pitch,player.yaw,0);}
-  else{const d=lookDir();const sgn=player.view===1?-1:1;let dist=4;const o=new THREE.Vector3(ex,ey,ez);
-    const ray=raycast(o,d.clone().multiplyScalar(sgn),4);if(ray){const hp=new THREE.Vector3(ray.x+0.5,ray.y+0.5,ray.z+0.5);dist=Math.max(0.5,hp.distanceTo(o)-1);}
+  else{const d=lookDir();const sgn=player.view===1?-1:1;const o=new THREE.Vector3(ex,ey,ez);let want=4;
+    for(let t=0.2;t<=4.01;t+=0.1){const x=o.x+d.x*sgn*t,y=o.y+d.y*sgn*t,z=o.z+d.z*sgn*t;let hit=false;for(const q of [[0,0,0],[0.2,0,0],[-0.2,0,0],[0,0.2,0],[0,-0.2,0],[0,0,0.2],[0,0,-0.2]])if(SOLID[getBlock(Math.floor(x+q[0]),Math.floor(y+q[1]),Math.floor(z+q[2]))]){hit=true;break;}if(hit){want=Math.max(0.3,t-0.15);break;}}
+    player.camDist=want<player.camDist?want:player.camDist+(want-player.camDist)*Math.min(1,dt*4);const dist=player.camDist;
     camera.position.copy(o).addScaledVector(d,sgn*dist);camera.rotation.set(player.view===1?player.pitch:-player.pitch,player.view===1?player.yaw:player.yaw+Math.PI,0);}
   updatePlayerModel();
   updateSky(dt);updateHand(dt);updateFX(dt);
