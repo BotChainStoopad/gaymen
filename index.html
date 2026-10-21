@@ -421,6 +421,16 @@ function buildTextures(){
   tex('ring_ice',P=>vor(P,8,(t,d)=>P.v(mix([226,240,255],[160,196,236],t*0.7+d*0.04),0.05),[120,150,190],0.6));
   tex('neptune_ice',P=>{P.fill(()=>P.v([40,82,190],0.08));for(let i=0;i<6;i++){let x=P.r()*16|0,y=P.r()*16|0;for(let k=0;k<5;k++)P.set(x+k,y-k,[120,170,250]);}});
   tex('neptune_slush',dust([110,150,232],[200,220,255]));
+  tex('mercury_regolith',dust([138,128,118],[100,92,86]));
+  tex('mercury_rock',P=>{stoneDraw(P,[92,86,80]);for(let i=0;i<5;i++){const x=1+P.r()*13|0,y=1+P.r()*13|0;P.set(x,y,[150,140,120]);P.set(x+1,y,[130,122,108]);}});
+  tex('venus_crust',P=>P.fill(()=>{const v=P.r();return v<0.12?[176,132,40]:v>0.9?[236,206,96]:v<0.18?[150,110,50]:P.v([214,172,70],0.08);}));
+  tex('venus_basalt',P=>{stoneDraw(P,[64,56,52]);for(let i=0;i<8;i++)P.set(P.r()*16,P.r()*16,[96,80,60]);});
+  tex('magma_rock',P=>{stoneDraw(P,[52,30,26]);for(let i=0;i<7;i++){let x=P.r()*16|0,y=P.r()*16|0;for(let k=0;k<7;k++){P.set(x,y,k%2?[255,110,20]:[255,60,10]);x+=P.r()<0.5?1:-1;y+=P.r()<0.6?1:0;}}for(let i=0;i<10;i++)P.set(P.r()*16,P.r()*16,[255,200,80]);});
+  tex('uranus_ice',P=>{P.fill(()=>P.v([110,200,214],0.07));for(let i=0;i<6;i++){let x=P.r()*16|0,y=P.r()*16|0;for(let k=0;k<5;k++)P.set(x+k,y-k,[190,240,246]);}});
+  tex('methane_frost',dust([200,236,240],[150,214,224]));
+  tex('pluto_ice',dust([236,226,218],[214,196,190]));
+  tex('tholin',dust([150,84,52],[110,60,40]));
+  tex('pluto_water_ice',P=>stoneDraw(P,[150,156,168]));
 }
 
 // =====================================================================
@@ -517,6 +527,16 @@ function setupBlocks(){
   def(80,'ring_ice','Ring Ice',{tex:'ring_ice',hardness:0.6,sound:'glass'});
   def(81,'neptune_ice','Neptunian Ice',{tex:'neptune_ice',hardness:1,sound:'glass'});
   def(82,'neptune_slush','Methane Slush',{tex:'neptune_slush',hardness:0.4,sound:'snow'});
+  def(83,'mercury_regolith','Mercurian Regolith',{tex:'mercury_regolith',hardness:0.5,sound:'sand'});
+  def(84,'mercury_rock','Mercurian Rock',{tex:'mercury_rock',hardness:1.5});
+  def(85,'venus_crust','Sulfur Crust',{tex:'venus_crust',hardness:0.6,sound:'gravel'});
+  def(86,'venus_basalt','Venusian Basalt',{tex:'venus_basalt',hardness:1.5});
+  def(87,'magma_rock','Magma Rock',{tex:'magma_rock',hardness:1.2,emit:13});
+  def(88,'uranus_ice','Uranian Ice',{tex:'uranus_ice',hardness:1,sound:'glass'});
+  def(89,'methane_frost','Methane Frost',{tex:'methane_frost',hardness:0.4,sound:'snow'});
+  def(90,'pluto_ice','Nitrogen Ice',{tex:'pluto_ice',hardness:0.5,sound:'snow'});
+  def(91,'tholin','Tholin Dust',{tex:'tholin',hardness:0.5,sound:'sand'});
+  def(92,'pluto_water_ice','Water Ice Bedrock',{tex:'pluto_water_ice',hardness:1.5,sound:'glass'});
   // ---- items (never placed in the world) ----
   const it=(id,key,name,o)=>def(id,key,name,Object.assign({tex:key,render:'item',hardness:0,sound:'none'},o));
   it(128,'wheat','Wheat');it(129,'bowl','Bowl');
@@ -565,12 +585,12 @@ const BIOME_NAMES=['Plains','Forest','Desert','Snowy Tundra','Ocean','Mountains'
 class Chunk{constructor(cx,cz){this.cx=cx;this.cz=cz;this.data=new Uint8Array(CS*CS*H);this.meta=new Uint8Array(CS*CS*H);this.group=null;this.meshes=[null,null,null];this.dirty=true;this.meshed=false;this.top=0;}}
 const world={seed:0,chunks:new Map(),edits:new Map(),noise:null,dim:'earth',dimEdits:{},dimFurnaces:{},dimPos:{},dimSpawn:{}};
 // ---- planets (each is its own dimension) ----
-const PLANET_ORDER=['earth','moon','mars','jupiter','saturn','neptune'];
+const PLANET_ORDER=['earth','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'];
 const EARTH_RS={nZen:[0.0025,0.004,0.012],zen:[0.09,0.24,0.72],nHor:[0.008,0.011,0.022],hor:[0.5,0.68,0.98],sZen:[0.12,0.12,0.3],sHor:[1.05,0.42,0.16],glow:[0.9,0.85,0.7],sGlow:[1.6,0.6,0.15],nAmb:[0.012,0.016,0.032],amb:[0.34,0.44,0.68]};
 const PLANETS={
   earth:{name:'Earth',g:1,sunSize:1,sunInt:1,atmo:1,stars:0,clouds:1,cloudTint:[1,1,1],cloudStretch:[1,1],haze:0.0028,rs:EARTH_RS,seed:0,
     desc:'Home. Grass, oceans and blue skies.',
-    bodies:[{t:'mars',phi:2.6,tilt:0.12,deg:0.6,dot:1},{t:'jupiter',phi:3.5,tilt:0.04,deg:0.9,dot:1},{t:'saturn',phi:4.2,tilt:0.15,deg:0.8,dot:1,ring:1}]},
+    bodies:[{t:'venus',phi:0.55,tilt:0.05,deg:0.8,dot:1},{t:'mercury',phi:0.3,tilt:0.02,deg:0.4,dot:1},{t:'mars',phi:2.6,tilt:0.12,deg:0.6,dot:1},{t:'jupiter',phi:3.5,tilt:0.04,deg:0.9,dot:1},{t:'saturn',phi:4.2,tilt:0.15,deg:0.8,dot:1,ring:1}]},
   moon:{name:'The Moon',lumFloor:0.35,g:0.17,sunSize:1,sunInt:1.15,atmo:0,stars:1,clouds:0,cloudTint:[1,1,1],cloudStretch:[1,1],haze:0,seed:1000,
     rs:{nZen:[0,0,0],zen:[0,0,0],nHor:[0,0,0],hor:[0.0015,0.0015,0.002],sZen:[0,0,0],sHor:[0.002,0.002,0.002],glow:[0.05,0.05,0.05],sGlow:[0.05,0.05,0.05],nAmb:[0.02,0.024,0.035],amb:[0.035,0.037,0.042]},
     fast:{day:0x000000,night:0x000000,fog:0x060607,nfog:0x020203,sunset:0x000000},
@@ -602,6 +622,32 @@ const PLANETS={
     desc:'Deep blue ice world where it rains diamonds. Triton above.',
     bodies:[{t:'triton',phi:2.5,tilt:0.38,deg:6.5}]}
 };
+Object.assign(PLANETS,{
+  mercury:{name:'Mercury',lumFloor:0.4,g:0.38,sunSize:2.6,sunInt:1.6,atmo:0,stars:1,clouds:0,cloudTint:[1,1,1],cloudStretch:[1,1],haze:0,seed:6000,
+    rs:{nZen:[0,0,0],zen:[0,0,0],nHor:[0,0,0],hor:[0.002,0.0018,0.0016],sZen:[0,0,0],sHor:[0.003,0.002,0.0015],glow:[0.12,0.1,0.08],sGlow:[0.12,0.1,0.08],nAmb:[0.012,0.012,0.014],amb:[0.04,0.038,0.036]},
+    fast:{day:0x000000,night:0x000000,fog:0x070605,nfog:0x020202,sunset:0x000000},
+    terrain:{base:64,s1:240,a1:12,s2:50,a2:4,ridge:20,craters:0.75,cgrid:36,top:'mercury_regolith',fill:'mercury_regolith',depth:3,stone:'mercury_rock',ores:[['iron_ore',16,8],['diamond_ore',3,6]],deco:'boulders',decoBlock:'mercury_rock'},
+    desc:'Closest to the Sun. A huge blazing Sun in a black sky, craters everywhere.',
+    bodies:[{t:'venus',phi:2.8,tilt:0.1,deg:1.2,dot:1},{t:'earth',phi:3.6,tilt:0.05,deg:0.6,dot:1}]},
+  venus:{name:'Venus',g:0.9,sunSize:1.4,sunInt:0.35,atmo:1,stars:0,clouds:1,cloudTint:[1,0.85,0.55],cloudStretch:[0.6,1.4],haze:0.02,seed:7000,
+    rs:{nZen:[0.02,0.012,0.004],zen:[0.75,0.55,0.25],nHor:[0.03,0.018,0.006],hor:[0.95,0.75,0.4],sZen:[0.6,0.35,0.12],sHor:[1.0,0.55,0.2],glow:[0.9,0.7,0.4],sGlow:[1.0,0.6,0.25],nAmb:[0.04,0.025,0.01],amb:[0.6,0.45,0.25]},
+    fast:{day:0xd9b26a,night:0x1a1004,fog:0xe0c080,nfog:0x1a1004,sunset:0xd08a3a},
+    terrain:{base:66,s1:200,a1:16,s2:45,a2:6,ridge:35,craters:0,cgrid:60,top:'venus_crust',fill:'venus_crust',depth:2,stone:'venus_basalt',ores:[['iron_ore',16,8],['diamond_ore',3,6]],deco:'vents'},
+    desc:'Scorching sulfur world under thick golden clouds. Glowing magma vents.',
+    bodies:[]},
+  uranus:{name:'Uranus',g:0.89,sunSize:0.2,sunInt:0.45,atmo:1,stars:0,clouds:0.3,cloudTint:[0.9,1,1],cloudStretch:[0.5,1.8],haze:0.004,seed:8000,rings:1,ringLat:8,ringAlpha:0.45,
+    rs:{nZen:[0.001,0.004,0.006],zen:[0.25,0.6,0.7],nHor:[0.003,0.008,0.01],hor:[0.6,0.85,0.9],sZen:[0.2,0.4,0.5],sHor:[0.6,0.8,0.85],glow:[0.7,0.9,0.9],sGlow:[0.8,0.9,0.9],nAmb:[0.006,0.012,0.016],amb:[0.25,0.42,0.48]},
+    fast:{day:0x8fd3dc,night:0x020809,fog:0xb5e6ec,nfog:0x020809,sunset:0x9ad0d8},
+    terrain:{base:66,s1:260,a1:14,s2:55,a2:5,ridge:20,craters:0,cgrid:60,top:'methane_frost',fill:'uranus_ice',depth:4,stone:'uranus_ice',ores:[['iron_ore',10,8],['diamond_ore',5,6]],deco:'spikes'},
+    desc:'Tilted ice giant. Pale cyan skies, faint rings standing on end, Miranda and Titania.',
+    bodies:[{t:'titania',phi:1.6,tilt:0.25,deg:3.2},{t:'miranda',phi:3.2,tilt:0.1,deg:2},{t:'ariel',phi:4.7,tilt:0.3,deg:2.6}]},
+  pluto:{name:'Pluto',lumFloor:0.25,g:0.06,sunSize:0.12,sunInt:0.9,atmo:0.2,stars:1,clouds:0,cloudTint:[1,1,1],cloudStretch:[1,1],haze:0.0015,seed:9000,
+    rs:{nZen:[0,0,0.001],zen:[0.01,0.02,0.05],nHor:[0,0,0.002],hor:[0.05,0.09,0.18],sZen:[0.01,0.02,0.05],sHor:[0.06,0.1,0.2],glow:[0.2,0.3,0.6],sGlow:[0.25,0.35,0.6],nAmb:[0.01,0.012,0.02],amb:[0.04,0.05,0.07]},
+    fast:{day:0x0b1424,night:0x010204,fog:0x1a2a44,nfog:0x010204,sunset:0x14223a},
+    terrain:{base:64,s1:300,a1:10,s2:60,a2:3,ridge:60,craters:0.25,cgrid:60,top:'tholin',fill:'tholin',top2:'pluto_ice',fill2:'pluto_ice',depth:3,stone:'pluto_water_ice',ores:[['iron_ore',8,8],['diamond_ore',4,6]]},
+    desc:'Frozen dwarf planet at the edge. Nitrogen ice plains, water-ice mountains, giant Charon. Moon-jumping gravity.',
+    bodies:[{t:'charon',phi:2.4,tilt:0.4,deg:7}]}
+});
 let PL=PLANETS.earth;
 function planetHeight(x,z){const n=world.noise,T=PL.terrain;
   let h=T.base+fbm2(n.h1,x/T.s1,z/T.s1,4)*T.a1+fbm2(n.h2,x/T.s2,z/T.s2,3)*T.a2;
@@ -613,16 +659,19 @@ function planetHeight(x,z){const n=world.noise,T=PL.terrain;
   return Math.max(6,Math.min(H-20,Math.floor(h)));}
 function generatePlanetChunk(cx,cz){
   const c=new Chunk(cx,cz);const d=c.data;const x0=cx*16,z0=cz*16;const n=world.noise;const T=PL.terrain;const seed=world.seed+PL.seed;
-  const top=I[T.top],fill=I[T.fill],stone=I[T.stone];const hs=new Int16Array(256);
+  const top=I[T.top],fill=I[T.fill],stone=I[T.stone],top2=T.top2?I[T.top2]:-1,fill2=T.fill2?I[T.fill2]:-1;const db=I[T.decoBlock||'mars_rock'];const hs=new Int16Array(256);
   for(let lz=0;lz<16;lz++)for(let lx=0;lx<16;lx++){const wx=x0+lx,wz=z0+lz;const h=planetHeight(wx,wz);hs[lx+lz*16]=h;
+    const alt=top2>=0&&n.g.noise2(wx/160,wz/160)>0.1;
     for(let y=0;y<=h;y++){let id;
-      if(y===0||(y<5&&hash3(wx,y,wz,seed)<(5-y)/5))id=I.bedrock;else if(y===h)id=top;else if(y>h-T.depth)id=fill;else id=stone;
+      if(y===0||(y<5&&hash3(wx,y,wz,seed)<(5-y)/5))id=I.bedrock;else if(y===h)id=alt?top2:top;else if(y>h-T.depth)id=alt?fill2:fill;else id=stone;
       if(id!==I.bedrock&&y>1&&y<h-1){const s=1/42;const a=n.c1.noise3(wx*s,y*s*1.7,wz*s),bb=n.c2.noise3(wx*s,y*s*1.7,wz*s);if(a*a+bb*bb<0.0105)id=0;else if(y<52&&n.c3.noise3(wx/64,y/28,wz/64)>0.64)id=0;}
       d[lx+16*(lz+16*y)]=id;}}
   const r=mulberry32((Math.imul(cx,73856093)^Math.imul(cz,19349663)^seed)>>>0);
   for(const [k,count,size] of T.ores){const id=I[k];for(let q=0;q<count;q++){let x=r()*16,y=3+r()*50,z=r()*16;for(let i=0;i<size;i++){const ix=x|0,iy=y|0,iz=z|0;if(ix>=0&&ix<16&&iz>=0&&iz<16&&iy>0&&iy<H){const idx=ix+16*(iz+16*iy);if(d[idx]===stone)d[idx]=id;}x+=r()*2-1;y+=r()*2-1;z+=r()*2-1;}}}
-  for(let lz=1;lz<15;lz++)for(let lx=1;lx<15;lx++){const h=hs[lx+lz*16];if(h+4>=H)continue;const idx=lx+16*(lz+16*h);if(d[idx]!==top)continue;const pr=hash3(x0+lx,5,z0+lz,seed);
-    if(T.deco==='boulders'&&pr<0.006){d[idx+256]=I.mars_rock;if(pr<0.003){d[idx+257]=I.mars_rock;d[idx+512]=I.mars_rock;}}
+  for(let lz=1;lz<15;lz++)for(let lx=1;lx<15;lx++){const h=hs[lx+lz*16];if(h+4>=H)continue;const idx=lx+16*(lz+16*h);if(d[idx]!==top&&d[idx]!==top2)continue;const pr=hash3(x0+lx,5,z0+lz,seed);
+    if(T.deco==='boulders'&&pr<0.006){d[idx+256]=db;if(pr<0.003){d[idx+257]=db;d[idx+512]=db;}}
+    else if(T.deco==='vents'&&pr<0.006){d[idx]=I.magma_rock;d[idx+256]=I.magma_rock;if(pr<0.003){d[idx+512]=I.magma_rock;d[idx+1]=I.magma_rock;}}
+    else if(T.deco==='spikes'&&pr<0.01){const ht=2+(pr*700|0)%5;for(let k=1;k<=ht;k++)d[idx+256*k]=k===ht?I.methane_frost:I.uranus_ice;}
     else if(T.deco==='crystals'&&pr<0.008){const ht=1+(pr*400|0)%3;for(let k=1;k<=ht;k++)d[idx+256*k]=I.storm_crystal;}
     else if(T.deco==='ice'&&pr<0.007){d[idx+256]=I.ring_ice;if(pr<0.0035){d[idx+257]=I.ring_ice;d[idx+256+16]=I.ring_ice;d[idx+512]=I.ring_ice;}}
     else if(T.deco==='diamonds'){if(pr<0.004)d[idx]=I.diamond_ore;else if(pr<0.012){const ht=2+(pr*900|0)%4;for(let k=1;k<=ht;k++)d[idx+256*k]=I.neptune_ice;}}}
@@ -1193,8 +1242,11 @@ function bodyCanvas(type){const W=256,Hh=128;const c=document.createElement('can
   for(let y=0;y<Hh;y++)for(let x=0;x<W;x++){const lon=x/W*Math.PI*2,lat=(y/Hh-0.5)*Math.PI;const p=[Math.cos(lat)*Math.cos(lon),Math.sin(lat),Math.cos(lat)*Math.sin(lon)];const la=lat/(Math.PI/2);let col;
     if(type==='earth'){const v=f3(p,1.5,5);if(v>0.06){col=M([70,128,52],[150,128,78],f3(p,4,3)*2+0.4);if(Math.abs(la)>0.55)col=M(col,[120,140,90],0.4);}else col=M([16,40,110],[34,86,170],(v+0.4)*2);
       if(Math.abs(la)>0.84)col=[236,242,250];const cl=f3([p[0]+3,p[1],p[2]],2.6,4);if(cl>0.08)col=M(col,[248,250,255],(cl-0.08)*4);}
-    else if(type==='moon'||type==='phobos'||type==='deimos'||type==='rhea'||type==='callisto'){const base=type==='callisto'?[88,78,66]:type==='rhea'?[190,186,180]:type==='moon'?[156,154,150]:[112,102,92];
+    else if(['moon','phobos','deimos','rhea','callisto','mercury','miranda','titania','ariel','charon'].includes(type)){const base={callisto:[88,78,66],rhea:[190,186,180],moon:[156,154,150],mercury:[140,130,120],miranda:[170,170,172],titania:[160,150,146],ariel:[184,180,178],charon:[150,145,140]}[type]||[112,102,92];
       col=shade(base,0.85+f3(p,3,4)*0.35);if(type==='moon'&&f3(p,1.3,3)>0.12)col=shade(col,0.66);const cr=f3(p,9,2);if(cr>0.42)col=shade(col,0.75);else if(cr>0.36)col=shade(col,1.2);if(type==='callisto'&&f3(p,14,1)>0.55)col=[220,214,200];}
+    else if(type==='venus'){col=M([236,206,140],[206,164,100],f3(p,2,4)*1.5+0.5+Math.sin(la*5+f3(p,1.5,2)*2)*0.15);}
+    else if(type==='uranus'){col=M([168,220,228],[150,206,218],Math.sin(la*6)*0.3+0.5+f3(p,2,2)*0.2);}
+    else if(type==='pluto'){col=M([206,170,140],[140,92,64],f3(p,2,4)*1.5+0.5);const hx=(lon-3.0)/0.55,hy=(la-0.05)/0.45;if(hx*hx+hy*hy<1)col=M([246,240,232],[226,214,204],f3(p,6,2)+0.5);}
     else if(type==='mars'){col=M([196,96,52],[130,62,38],f3(p,2,4)*2+0.3);if(Math.abs(la)>0.86)col=[236,232,228];}
     else if(type==='jupiter'){const b=Math.sin(la*19+f3(p,3,3)*1.6);const t=f3(p,6,2);col=b>0.3?M([226,206,176],[236,226,206],t+0.5):b>-0.3?M([196,138,92],[214,170,122],t+0.5):M([150,98,70],[176,120,84],t+0.5);
       const sx=((lon-1.2)/0.32),sy=((la+0.24)/0.11);const sdd=sx*sx+sy*sy;if(sdd<1)col=M([206,92,60],[226,140,100],sdd+f3(p,12,2));}
@@ -1233,7 +1285,7 @@ function buildSkyBodies(){
     const m=new THREE.Mesh(bodyGeo,mat);m.renderOrder=-90;m.frustumCulled=false;m.layers.enable(2);scene.add(m);let ring=null;
     if(b.ring){ring=new THREE.Mesh(new THREE.RingGeometry(1.25,2.3,96,1),ringMat(1.25,2.3));ring.rotation.x=1.15;ring.renderOrder=-89;ring.frustumCulled=false;ring.layers.enable(2);m.add(ring);}
     skyBodies.push({b,mesh:m,ring});}
-  if(PL.rings){skyRing=new THREE.Mesh(new THREE.RingGeometry(1150,2100,384,1),ringMat(1150,2100));const lat=20*Math.PI/180;const nrm=new THREE.Vector3(0,Math.sin(lat),-Math.cos(lat));
+  if(PL.rings){skyRing=new THREE.Mesh(new THREE.RingGeometry(1150,2100,384,1),ringMat(1150,2100));const lat=(PL.ringLat||20)*Math.PI/180;const nrm=new THREE.Vector3(0,Math.sin(lat),-Math.cos(lat));
     skyRing.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),nrm);skyRing.material.uniforms.ringN.value.copy(nrm);skyRing.renderOrder=-95;skyRing.frustumCulled=false;skyRing.layers.enable(2);scene.add(skyRing);}
 }
 const _bq=new THREE.Vector3();
@@ -1242,7 +1294,7 @@ function updateSkyBodies(ang,day,sd){const cp=camera.position,dist=1500,sun=RX.o
     o.mesh.position.copy(cp).addScaledVector(dd,dist);o.mesh.scale.setScalar(dist*Math.tan(b.deg*Math.PI/360));o.mesh.visible=dd.y>-0.25;
     const u=o.mesh.material.uniforms;u.sunDir.value.copy(sun);u.lin.value=lin;u.inten.value=inten;u.spin.value=RU.time.value*0.002;u.fade.value=day*PL.atmo*(b.dot?0.97:0.22);
     if(o.ring){const ru=o.ring.material.uniforms;ru.sunDir.value.copy(sun);ru.lin.value=lin;ru.inten.value=inten;ru.fade.value=u.fade.value;o.ring.getWorldQuaternion(new THREE.Quaternion());ru.ringN.value.set(0,0,1).applyQuaternion(o.ring.getWorldQuaternion(new THREE.Quaternion()));}}
-  if(skyRing){skyRing.position.set(cp.x,cp.y-900,cp.z);const ru=skyRing.material.uniforms;ru.sunDir.value.copy(sun);ru.lin.value=lin;ru.inten.value=inten*1.2;ru.fade.value=day*0.15;skyRing.visible=!player.headInWater;}}
+  if(skyRing){skyRing.position.set(cp.x,cp.y-900,cp.z);const ru=skyRing.material.uniforms;ru.sunDir.value.copy(sun);ru.lin.value=lin;ru.inten.value=inten*1.2;ru.fade.value=Math.max(day*0.15,1-(PL.ringAlpha||1));skyRing.visible=!player.headInWater;}}
 function setDim(dim){
   world.dimEdits[world.dim]=world.edits;world.dimFurnaces[world.dim]=furnaces;
   world.dim=dim;PL=PLANETS[dim];initNoise(world.seed+PL.seed);
@@ -1267,9 +1319,11 @@ function teleportTo(dim){
 function showPlanetTitle(){const t=document.getElementById('planettitle');t.innerHTML=PL.name+'<div style="font-size:26px">Gravity: '+PL.g+' g</div>';t.style.opacity=1;setTimeout(()=>t.style.opacity=0,3500);}
 function planetIcon(dim){const c=document.createElement('canvas');c.width=c.height=192;const g=c.getContext('2d');
   if(dim==='saturn'){g.save();g.translate(96,96);g.rotate(-0.35);g.scale(1,0.3);g.strokeStyle='rgba(220,200,150,0.85)';g.lineWidth=16;g.beginPath();g.arc(0,0,84,0,Math.PI*2);g.stroke();g.restore();}
-  const r=dim==='saturn'?50:dim==='moon'?60:72;g.save();g.beginPath();g.arc(96,96,r,0,Math.PI*2);g.clip();g.drawImage(bodyTex(dim).image,0,0,256,128,96-r*2,96-r,r*4,r*2);
+  if(dim==='uranus'){g.save();g.translate(96,96);g.rotate(1.35);g.scale(1,0.22);g.strokeStyle='rgba(200,235,240,0.45)';g.lineWidth=6;g.beginPath();g.arc(0,0,82,0,Math.PI*2);g.stroke();g.restore();}
+  const r=dim==='saturn'||dim==='uranus'?50:['moon','mercury','pluto'].includes(dim)?58:72;g.save();g.beginPath();g.arc(96,96,r,0,Math.PI*2);g.clip();g.drawImage(bodyTex(dim).image,0,0,256,128,96-r*2,96-r,r*4,r*2);
   const gr=g.createRadialGradient(96-r*0.4,96-r*0.4,r*0.1,96,96,r*1.05);gr.addColorStop(0,'rgba(255,255,255,0.15)');gr.addColorStop(0.6,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,0.75)');g.fillStyle=gr;g.fillRect(0,0,192,192);g.restore();
   if(dim==='saturn'){g.save();g.translate(96,96);g.rotate(-0.35);g.scale(1,0.3);g.strokeStyle='rgba(230,210,160,0.9)';g.lineWidth=16;g.beginPath();g.arc(0,0,84,0,Math.PI);g.stroke();g.restore();}
+  if(dim==='uranus'){g.save();g.translate(96,96);g.rotate(1.35);g.scale(1,0.22);g.strokeStyle='rgba(210,240,245,0.55)';g.lineWidth=6;g.beginPath();g.arc(0,0,82,0,Math.PI);g.stroke();g.restore();}
   return c;}
 function openPlanets(){if(state!=='playing')return;state='portal';for(const k in keys)keys[k]=false;mouseL=mouseR=false;document.exitPointerLock&&document.exitPointerLock();
   const list=document.getElementById('planetlist');list.innerHTML='';
