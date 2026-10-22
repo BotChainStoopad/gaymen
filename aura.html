@@ -1240,7 +1240,7 @@ function updateWorld(dt) {
     if (d.age >= d.life) { burst.A[i] = 0; continue; }
     live++; d.age += dt; d.v.multiplyScalar(Math.exp(-dt * 2.4)); d.v.y += .8 * dt; d.p.addScaledVector(d.v, dt);
     burst.P[o] = d.p.x; burst.P[o + 1] = d.p.y; burst.P[o + 2] = d.p.z;
-    burst.A[i] = Math.pow(1 - d.age / d.life, 1.5); burst.S[i] = d.s;
+    burst.A[i] = Math.pow(Math.max(0, 1 - d.age / d.life), 1.5); burst.S[i] = d.s;
     burst.C[o] = lerp(.7, 1.2, d.hot) * 3; burst.C[o + 1] = lerp(.3, 1, d.hot) * 3; burst.C[o + 2] = 3.6;
   }
   burst.flush();
