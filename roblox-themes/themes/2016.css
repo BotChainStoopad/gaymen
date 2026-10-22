@@ -1,0 +1,36 @@
+/* 2016 Roblox — the first "new" light site: white bar, flat blue, Source Sans. */
+html[data-rbxt="2016"] {
+  --rx-font: "Source Sans Pro", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --rx-bg: #e3e3e3;
+  --rx-surface: #ffffff;
+  --rx-surface-2: #f2f2f2;
+  --rx-border: #d1d1d1;
+  --rx-text: #191919;
+  --rx-text-2: #757575;
+  --rx-heading: #191919;
+  --rx-link: #00a2ff;
+  --rx-header-bg: #00a2ff;
+  --rx-header-text: #ffffff;
+  --rx-nav-bg: #f2f2f2;
+  --rx-nav-text: #191919;
+  --rx-primary-bg: #00a2ff;
+  --rx-primary-text: #ffffff;
+  --rx-primary-border: #00a2ff;
+  --rx-secondary-bg: #ffffff;
+  --rx-secondary-text: #191919;
+  --rx-play-bg: #02b757;
+  --rx-play-text: #ffffff;
+  --rx-input-bg: #ffffff;
+  --rx-radius: 3px;
+  --rx-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+html[data-rbxt="2016"] #header .navbar-search input,
+html[data-rbxt="2016"] #navbar-search-input {
+  border: none !important;
+}
+
+html[data-rbxt="2016"] .container-header h2 {
+  font-weight: 400 !important;
+  font-size: 22px !important;
+}

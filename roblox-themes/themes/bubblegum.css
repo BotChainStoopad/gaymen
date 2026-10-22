@@ -1,0 +1,31 @@
+/* Bubblegum — soft pastel pink & mint, extra-round everything. */
+html[data-rbxt="bubblegum"] {
+  --rx-font: "Nunito", "Varela Round", "Quicksand", "Segoe UI", sans-serif;
+  --rx-bg: #fff0f6;
+  --rx-bg-image: linear-gradient(135deg, #ffe3ef 0%, #fff6e5 50%, #e3fff4 100%);
+  --rx-surface: #ffffff;
+  --rx-surface-2: #ffe8f2;
+  --rx-border: #ffc7dd;
+  --rx-text: #5a2a44;
+  --rx-text-2: #9a6b85;
+  --rx-heading: #d6337a;
+  --rx-link: #d6337a;
+  --rx-header-bg: linear-gradient(90deg, #ff9cc6, #ffc1a1);
+  --rx-header-text: #ffffff;
+  --rx-nav-bg: #fff7fb;
+  --rx-nav-text: #5a2a44;
+  --rx-primary-bg: #ff6fa8;
+  --rx-primary-text: #ffffff;
+  --rx-primary-border: #ff6fa8;
+  --rx-secondary-bg: #ffffff;
+  --rx-secondary-text: #d6337a;
+  --rx-play-bg: #3ccf9b;
+  --rx-play-text: #ffffff;
+  --rx-input-bg: #ffffff;
+  --rx-radius: 18px;
+  --rx-shadow: 0 6px 18px rgba(255, 111, 168, 0.18);
+}
+
+html[data-rbxt="bubblegum"] [class*="btn-"] {
+  border-radius: 999px !important;
+}

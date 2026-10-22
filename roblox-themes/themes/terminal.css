@@ -1,0 +1,56 @@
+/* Terminal — green phosphor on black, monospace, CRT scanlines. */
+html[data-rbxt="terminal"] {
+  --rx-font: "Cascadia Mono", "Consolas", "Menlo", "DejaVu Sans Mono", "Courier New", monospace;
+  --rx-bg: #020a02;
+  --rx-surface: #031203;
+  --rx-surface-2: #072407;
+  --rx-border: #1f8f2f;
+  --rx-text: #33ff66;
+  --rx-text-2: #1fbf45;
+  --rx-heading: #66ff8c;
+  --rx-link: #aaffbb;
+  --rx-header-bg: #010601;
+  --rx-header-text: #33ff66;
+  --rx-nav-bg: #010601;
+  --rx-nav-text: #33ff66;
+  --rx-primary-bg: transparent;
+  --rx-primary-text: #33ff66;
+  --rx-primary-border: #33ff66;
+  --rx-secondary-bg: transparent;
+  --rx-secondary-text: #1fbf45;
+  --rx-play-bg: #33ff66;
+  --rx-play-text: #020a02;
+  --rx-input-bg: #010601;
+  --rx-radius: 0px;
+  --rx-shadow: none;
+  --rx-text-shadow: 0 0 6px rgba(51, 255, 102, 0.6);
+}
+
+html[data-rbxt="terminal"] body {
+  text-shadow: 0 0 4px rgba(51, 255, 102, 0.45);
+}
+
+html[data-rbxt="terminal"] .container-header h2::before {
+  content: "> ";
+}
+
+/* Images look like an old green monitor */
+html[data-rbxt="terminal"] .game-card-thumb-container img,
+html[data-rbxt="terminal"] .thumbnail-2d-container img {
+  filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3) brightness(0.9);
+}
+
+html[data-rbxt="terminal"][data-rbxt-fx="on"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 2px, rgba(0, 0, 0, 0.25) 3px);
+  animation: rbxt-flicker 4s steps(2) infinite;
+}
+
+@keyframes rbxt-flicker {
+  0%, 96% { opacity: 1; }
+  98% { opacity: 0.85; }
+}

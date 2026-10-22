@@ -1,0 +1,289 @@
+/*
+ * RoTheme base layer.
+ * Nothing here applies until content.js sets <html data-rbxt="themename">.
+ * Each theme file only sets the --rx-* variables below and adds its own extras.
+ */
+
+html[data-rbxt] {
+  --rx-font: inherit;
+  --rx-bg: #f2f4f5;
+  --rx-bg-image: none;
+  --rx-surface: #ffffff;
+  --rx-surface-2: #f2f4f5;
+  --rx-surface-filter: none;
+  --rx-border: rgba(0, 0, 0, 0.12);
+  --rx-text: #393b3d;
+  --rx-text-2: #606162;
+  --rx-heading: var(--rx-text);
+  --rx-link: #0074bd;
+  --rx-header-bg: #ffffff;
+  --rx-header-text: var(--rx-text);
+  --rx-nav-bg: var(--rx-surface);
+  --rx-nav-text: var(--rx-text);
+  --rx-primary-bg: #00a2ff;
+  --rx-primary-text: #ffffff;
+  --rx-primary-border: transparent;
+  --rx-secondary-bg: var(--rx-surface-2);
+  --rx-secondary-text: var(--rx-text);
+  --rx-play-bg: #00b06f;
+  --rx-play-text: #ffffff;
+  --rx-input-bg: var(--rx-surface);
+  --rx-radius: 8px;
+  --rx-shadow: none;
+  --rx-text-shadow: none;
+}
+
+/* ---------- Page background & typography ---------- */
+html[data-rbxt],
+html[data-rbxt] body {
+  background: var(--rx-bg) !important;
+  background-image: var(--rx-bg-image) !important;
+  background-attachment: fixed !important;
+  background-size: cover !important;
+  color: var(--rx-text) !important;
+}
+
+html[data-rbxt] body,
+html[data-rbxt] body *:not([class*="icon"]):not(svg):not(svg *) {
+  font-family: var(--rx-font) !important;
+}
+
+html[data-rbxt] #wrap,
+html[data-rbxt] #container-main,
+html[data-rbxt] .container-main,
+html[data-rbxt] .content,
+html[data-rbxt] #content,
+html[data-rbxt] main,
+html[data-rbxt] .rbx-body,
+html[data-rbxt] .light-theme,
+html[data-rbxt] .dark-theme {
+  background-color: transparent !important;
+  color: var(--rx-text) !important;
+}
+
+html[data-rbxt] h1,
+html[data-rbxt] h2,
+html[data-rbxt] h3,
+html[data-rbxt] h4,
+html[data-rbxt] .text-emphasis,
+html[data-rbxt] .text-title,
+html[data-rbxt] .text-label,
+html[data-rbxt] .game-name,
+html[data-rbxt] .game-card-name,
+html[data-rbxt] .container-header h2,
+html[data-rbxt] .profile-name {
+  color: var(--rx-heading) !important;
+  text-shadow: var(--rx-text-shadow) !important;
+}
+
+html[data-rbxt] .text-secondary,
+html[data-rbxt] .text-date-hint,
+html[data-rbxt] .text-description,
+html[data-rbxt] .game-card-info,
+html[data-rbxt] .info-label,
+html[data-rbxt] .small,
+html[data-rbxt] .xsmall {
+  color: var(--rx-text-2) !important;
+}
+
+html[data-rbxt] a:not(.btn):not([class*="btn-"]):not(.game-card-link):not(.dynamic-overflow-container) {
+  color: var(--rx-link);
+}
+
+/* ---------- Top header ---------- */
+html[data-rbxt] #header,
+html[data-rbxt] .rbx-header,
+html[data-rbxt] #header .navbar,
+html[data-rbxt] .navbar-fixed-top {
+  background: var(--rx-header-bg) !important;
+  border-color: var(--rx-border) !important;
+  box-shadow: var(--rx-shadow) !important;
+}
+
+html[data-rbxt] #header a,
+html[data-rbxt] #header .nav-menu-title,
+html[data-rbxt] #header .font-header-2,
+html[data-rbxt] .rbx-header a,
+html[data-rbxt] .rbx-navbar a {
+  color: var(--rx-header-text) !important;
+}
+
+html[data-rbxt] #header .navbar-search input,
+html[data-rbxt] #navbar-search-input,
+html[data-rbxt] .navbar-search .input-field {
+  background: var(--rx-input-bg) !important;
+  color: var(--rx-text) !important;
+  border: 1px solid var(--rx-border) !important;
+  border-radius: var(--rx-radius) !important;
+}
+
+/* ---------- Left sidebar ---------- */
+html[data-rbxt] #navigation,
+html[data-rbxt] .rbx-left-col,
+html[data-rbxt] #navigation-container {
+  background: var(--rx-nav-bg) !important;
+  border-color: var(--rx-border) !important;
+}
+
+html[data-rbxt] #navigation a,
+html[data-rbxt] #navigation .font-header-2,
+html[data-rbxt] .rbx-left-col a,
+html[data-rbxt] .rbx-left-col .text-nav {
+  color: var(--rx-nav-text) !important;
+}
+
+/* ---------- Panels / cards / menus ---------- */
+html[data-rbxt] .section-content,
+html[data-rbxt] .rbx-tabs-horizontal,
+html[data-rbxt] .profile-header,
+html[data-rbxt] .profile-container .section-content,
+html[data-rbxt] .dropdown-menu,
+html[data-rbxt] .popover,
+html[data-rbxt] .popover-content,
+html[data-rbxt] .modal-content,
+html[data-rbxt] .modal-body,
+html[data-rbxt] .modal-header,
+html[data-rbxt] .modal-footer,
+html[data-rbxt] .game-main-content,
+html[data-rbxt] .game-about-container,
+html[data-rbxt] .avatar-back,
+html[data-rbxt] .list-item.game-card .game-card-container,
+html[data-rbxt] .friends-carousel-container,
+html[data-rbxt] .item-card-container,
+html[data-rbxt] .catalog-item-container,
+html[data-rbxt] .notification-stream-base,
+html[data-rbxt] #chat-container .chat-main,
+html[data-rbxt] .chat-container,
+html[data-rbxt] .rbx-scrollbar.dialog-container {
+  background-color: var(--rx-surface) !important;
+  color: var(--rx-text) !important;
+  border-color: var(--rx-border) !important;
+  border-radius: var(--rx-radius) !important;
+  box-shadow: var(--rx-shadow) !important;
+  -webkit-backdrop-filter: var(--rx-surface-filter);
+  backdrop-filter: var(--rx-surface-filter);
+}
+
+html[data-rbxt] .dropdown-menu li a:hover,
+html[data-rbxt] .dropdown-menu li button:hover,
+html[data-rbxt] .rbx-tab:hover,
+html[data-rbxt] .rbx-tab.active {
+  background-color: var(--rx-surface-2) !important;
+}
+
+html[data-rbxt] .rbx-tab a,
+html[data-rbxt] .rbx-tab .text-lead {
+  color: var(--rx-text) !important;
+}
+
+html[data-rbxt] .rbx-divider,
+html[data-rbxt] hr {
+  background-color: var(--rx-border) !important;
+  border-color: var(--rx-border) !important;
+}
+
+/* Game / item thumbnails get the theme's corner rounding */
+html[data-rbxt] .game-card-thumb-container,
+html[data-rbxt] .game-card-thumb,
+html[data-rbxt] .thumbnail-2d-container,
+html[data-rbxt] .avatar-card-image {
+  border-radius: var(--rx-radius) !important;
+}
+
+/* ---------- Buttons ---------- */
+html[data-rbxt] .btn-primary-xs,
+html[data-rbxt] .btn-primary-sm,
+html[data-rbxt] .btn-primary-md,
+html[data-rbxt] .btn-primary-lg,
+html[data-rbxt] .btn-cta-xs,
+html[data-rbxt] .btn-cta-sm,
+html[data-rbxt] .btn-cta-md,
+html[data-rbxt] .btn-cta-lg {
+  background: var(--rx-primary-bg) !important;
+  color: var(--rx-primary-text) !important;
+  border: 1px solid var(--rx-primary-border) !important;
+  border-radius: var(--rx-radius) !important;
+}
+
+html[data-rbxt] .btn-secondary-xs,
+html[data-rbxt] .btn-secondary-sm,
+html[data-rbxt] .btn-secondary-md,
+html[data-rbxt] .btn-secondary-lg,
+html[data-rbxt] .btn-control-xs,
+html[data-rbxt] .btn-control-sm,
+html[data-rbxt] .btn-control-md,
+html[data-rbxt] .btn-control-lg,
+html[data-rbxt] .btn-alert-md {
+  background: var(--rx-secondary-bg) !important;
+  color: var(--rx-secondary-text) !important;
+  border: 1px solid var(--rx-border) !important;
+  border-radius: var(--rx-radius) !important;
+}
+
+/* The big green Play button */
+html[data-rbxt] .btn-common-play-game-lg,
+html[data-rbxt] .btn-growth-xs,
+html[data-rbxt] .btn-growth-sm,
+html[data-rbxt] .btn-growth-md,
+html[data-rbxt] .btn-growth-lg,
+html[data-rbxt] [data-testid="play-button"],
+html[data-rbxt] #game-details-play-button-container button {
+  background: var(--rx-play-bg) !important;
+  color: var(--rx-play-text) !important;
+  border-radius: var(--rx-radius) !important;
+}
+
+/* ---------- Inputs ---------- */
+html[data-rbxt] input.form-control,
+html[data-rbxt] textarea.form-control,
+html[data-rbxt] .input-field,
+html[data-rbxt] select.input-field,
+html[data-rbxt] .rbx-select {
+  background: var(--rx-input-bg) !important;
+  color: var(--rx-text) !important;
+  border: 1px solid var(--rx-border) !important;
+  border-radius: var(--rx-radius) !important;
+}
+
+/* ---------- Footer ---------- */
+html[data-rbxt] #footer-container,
+html[data-rbxt] .footer,
+html[data-rbxt] footer {
+  background: var(--rx-nav-bg) !important;
+  color: var(--rx-text-2) !important;
+  border-color: var(--rx-border) !important;
+}
+
+/* ---------- Extension UI injected into the page ---------- */
+.rbxt-hidden {
+  display: none !important;
+}
+
+.rbxt-playtime {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0 10px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  border-radius: 999px;
+  background: rgba(0, 162, 255, 0.12);
+  color: inherit;
+  border: 1px solid rgba(0, 162, 255, 0.35);
+}
+
+html[data-rbxt] .rbxt-playtime {
+  background: var(--rx-surface-2);
+  color: var(--rx-text);
+  border-color: var(--rx-border);
+}
+
+.rbxt-playtime b {
+  font-weight: 700;
+}
+
+.rbxt-playtime .rbxt-sep {
+  opacity: 0.45;
+}
