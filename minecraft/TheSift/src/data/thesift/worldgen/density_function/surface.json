@@ -1,0 +1,60 @@
+{
+  "type": "minecraft:cache_2d",
+  "argument": {
+    "type": "minecraft:add",
+    "argument1": {
+      "type": "minecraft:add",
+      "argument1": 1.4167,
+      "argument2": {
+        "type": "minecraft:mul",
+        "argument1": 0.25,
+        "argument2": {
+          "type": "minecraft:flat_cache",
+          "argument": {
+            "type": "minecraft:noise",
+            "noise": "thesift:height",
+            "xz_scale": 1.0,
+            "y_scale": 0.0
+          }
+        }
+      }
+    },
+    "argument2": {
+      "type": "minecraft:add",
+      "argument1": {
+        "type": "minecraft:mul",
+        "argument1": "thesift:hills_weight",
+        "argument2": {
+          "type": "minecraft:mul",
+          "argument1": 0.8333,
+          "argument2": {
+            "type": "minecraft:abs",
+            "argument": {
+              "type": "minecraft:noise",
+              "noise": "thesift:hill",
+              "xz_scale": 1.0,
+              "y_scale": 0.0
+            }
+          }
+        }
+      },
+      "argument2": {
+        "type": "minecraft:mul",
+        "argument1": "thesift:dunes_weight",
+        "argument2": {
+          "type": "minecraft:mul",
+          "argument1": 0.25,
+          "argument2": {
+            "type": "minecraft:abs",
+            "argument": {
+              "type": "minecraft:noise",
+              "noise": "thesift:dune",
+              "xz_scale": 1.0,
+              "y_scale": 0.0
+            }
+          }
+        }
+      }
+    }
+  }
+}

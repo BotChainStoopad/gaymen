@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:add",
+  "argument1": {
+    "type": "minecraft:add",
+    "argument1": {
+      "type": "minecraft:y_clamped_gradient",
+      "from_y": -64,
+      "to_y": 320,
+      "from_value": 1.3333,
+      "to_value": -6.6667
+    },
+    "argument2": "thesift:surface"
+  },
+  "argument2": {
+    "type": "minecraft:mul",
+    "argument1": 0.12,
+    "argument2": {
+      "type": "minecraft:noise",
+      "noise": "thesift:detail",
+      "xz_scale": 1.0,
+      "y_scale": 1.0
+    }
+  }
+}

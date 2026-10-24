@@ -1,0 +1,12 @@
+{
+  "condition": "minecraft:entity_properties",
+  "entity": "this",
+  "predicate": {
+    "location": {
+      "dimension": "thesift:the_sift",
+      "fluid": {
+        "fluids": "#minecraft:water"
+      }
+    }
+  }
+}

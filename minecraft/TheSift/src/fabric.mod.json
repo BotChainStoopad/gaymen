@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "thesift",
+  "version": "1.0.0",
+  "name": "The Sift",
+  "description": "Adds The Sift - Minecraft's fourth dimension - with its Meadows, Carapace and Hills biomes, pink ichor pools, coral towers, white willows, giant fossils and sculk rifts.",
+  "authors": [
+    "BotChainStoopad"
+  ],
+  "license": "MIT",
+  "icon": "assets/thesift/icon.png",
+  "environment": "*",
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": ">=1.21 <1.21.2",
+    "fabric-resource-loader-v0": "*"
+  }
+}

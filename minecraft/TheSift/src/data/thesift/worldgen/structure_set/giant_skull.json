@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "thesift:giant_skull",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 30,
+    "separation": 11,
+    "salt": 573920184
+  }
+}

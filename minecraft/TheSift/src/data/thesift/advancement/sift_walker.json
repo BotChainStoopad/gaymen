@@ -1,0 +1,79 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:recovery_compass"
+    },
+    "title": {
+      "text": "Sift Walker"
+    },
+    "description": {
+      "text": "Visit every biome of the Sift"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "meadows": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "biomes": "thesift:meadows"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "carapace": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "biomes": "thesift:carapace"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "hills": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "biomes": "thesift:hills"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "thesift:hills",
+  "requirements": [
+    [
+      "meadows"
+    ],
+    [
+      "carapace"
+    ],
+    [
+      "hills"
+    ]
+  ]
+}

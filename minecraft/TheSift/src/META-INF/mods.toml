@@ -1,0 +1,19 @@
+modLoader="lowcodefml"
+loaderVersion="[1,)"
+license="MIT"
+
+[[mods]]
+modId="thesift"
+version="1.0.0"
+displayName="The Sift"
+authors="BotChainStoopad"
+logoFile="pack.png"
+description='''Adds The Sift - Minecraft's fourth dimension - with its Meadows, Carapace and Hills biomes, pink ichor pools, coral towers, white willows, giant fossils and sculk rifts.'''
+
+[[dependencies.thesift]]
+modId="minecraft"
+type="required"
+mandatory=true
+versionRange="[1.21,1.21.2)"
+ordering="NONE"
+side="BOTH"
